@@ -29,4 +29,4 @@ go.work.sum
 .vscode/
 *.iml
 debug/
-
+.DS_Store
