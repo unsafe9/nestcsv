@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/base64"
+	"encoding/csv"
 	"fmt"
 	"golang.org/x/sync/errgroup"
 	"io"
@@ -49,18 +50,18 @@ func CollectSpreadsheetsThroughGAS(out chan<- CSV, option *GASOption) error {
 			}
 			defer file.Close()
 
-			csvData, err := io.ReadAll(file)
+			rows, err := csv.NewReader(file).ReadAll()
 			if err != nil {
 				return fmt.Errorf("failed to read the file: %s, %w", zipFile.Name, err)
 			}
 
-			csv := NewCSV(zipFile.Name, csvData)
+			csvData := NewCSV(zipFile.Name, rows)
 			if option.DebugSaveDir != nil {
-				if err := csv.Save(*option.DebugSaveDir); err != nil {
+				if err := csvData.Save(*option.DebugSaveDir); err != nil {
 					return err
 				}
 			}
-			out <- csv
+			out <- csvData
 			return nil
 		})
 	}

@@ -1,6 +1,7 @@
 package datasource
 
 import (
+	"encoding/csv"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,13 +10,13 @@ import (
 
 type CSV struct {
 	Name string
-	Data []byte
+	Rows [][]string
 }
 
-func NewCSV(name string, data []byte) CSV {
+func NewCSV(name string, rows [][]string) CSV {
 	return CSV{
 		Name: strings.TrimSuffix(filepath.Base(name), ".csv"),
-		Data: data,
+		Rows: rows,
 	}
 }
 
@@ -29,7 +30,7 @@ func (c *CSV) Save(rootDir string) error {
 	}
 	defer file.Close()
 
-	if _, err := file.Write(c.Data); err != nil {
+	if err := csv.NewWriter(file).WriteAll(c.Rows); err != nil {
 		return fmt.Errorf("failed to write the file: %s, %w", c.Name, err)
 	}
 	return nil

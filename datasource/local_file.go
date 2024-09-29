@@ -1,6 +1,7 @@
 package datasource
 
 import (
+	"encoding/csv"
 	"os"
 	"path/filepath"
 )
@@ -15,12 +16,18 @@ func CollectLocalFiles(out chan<- CSV, option *LocalFileOption) error {
 			return err
 		}
 		if filepath.Ext(path) == ".csv" {
-			data, err := os.ReadFile(path)
+			file, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+
+			rows, err := csv.NewReader(file).ReadAll()
 			if err != nil {
 				return err
 			}
 
-			out <- NewCSV(path, data)
+			out <- NewCSV(path, rows)
 		}
 		return nil
 	})

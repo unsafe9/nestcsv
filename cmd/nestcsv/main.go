@@ -57,7 +57,7 @@ func main() {
 	var tableWaitGroup errgroup.Group
 	for csv := range out {
 		tableWaitGroup.Go(func() error {
-			table, err := nestcsv.ParseTable(csv.Name, csv.Data)
+			table, err := nestcsv.ParseTable(csv.Name, csv.Rows)
 			if err != nil {
 				return err
 			}

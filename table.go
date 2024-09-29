@@ -1,8 +1,6 @@
 package nestcsv
 
 import (
-	"bytes"
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"github.com/unsafe9/nestcsv/internal"
@@ -102,15 +100,7 @@ func checkAllCellsEmpty(field *TableField, row []string) bool {
 	return internal.IsAllEmpty(cells)
 }
 
-func ParseTable(fileName string, csvData []byte) (*Table, error) {
-	reader := csv.NewReader(bytes.NewReader(csvData))
-	reader.Comment = '#'
-	reader.TrimLeadingSpace = true
-	rows, err := reader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("failed to read the csv: %s, %w", fileName, err)
-	}
-
+func ParseTable(fileName string, rows [][]string) (*Table, error) {
 	const headerRows = 3
 	if len(rows) < headerRows {
 		return nil, fmt.Errorf("invalid csv data: %s", fileName)
@@ -140,8 +130,15 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 		Name: names[0],
 		Type: types[0],
 	})
-	for i := range rows {
+	for i := 0; i < dataLen; i++ {
 		id := rows[i][0]
+		if strings.HasPrefix(id, "#") {
+			rows = append(rows[:i], rows[i+1:]...)
+			i--
+			dataLen--
+			continue
+		}
+	
 		if value, ok := rowMap[id]; ok {
 			if _, ok := multiLineArrayRowCount[id]; !ok {
 				multiLineArrayRowCount[id] = 2
