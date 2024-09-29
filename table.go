@@ -14,12 +14,13 @@ import (
 )
 
 type TableField struct {
-	Name         string
-	Type         string
-	IsArray      bool
-	StructFields []*TableField
-	ParentField  *TableField
-	column       int
+	Name             string
+	Type             string
+	IsMultiLineArray bool
+	IsCellArray      bool
+	StructFields     []*TableField
+	ParentField      *TableField
+	column           int
 }
 
 type Table struct {
@@ -88,6 +89,19 @@ func (t *Table) SaveAsJson(option *TableSaveOption) error {
 	return nil
 }
 
+func checkAllCellsEmpty(field *TableField, row []string) bool {
+	var cells []string
+	var visitField func(f *TableField)
+	visitField = func(f *TableField) {
+		cells = append(cells, row[f.column])
+		for _, structField := range f.StructFields {
+			visitField(structField)
+		}
+	}
+	visitField(field)
+	return internal.IsAllEmpty(cells)
+}
+
 func ParseTable(fileName string, csvData []byte) (*Table, error) {
 	reader := csv.NewReader(bytes.NewReader(csvData))
 	reader.Comment = '#'
@@ -112,8 +126,9 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 			Fields: make([]*TableField, 0, colLen),
 			Values: make([]map[string]any, 0, dataLen),
 		}
-		rowMap               = make(map[string]map[string]any)
-		multiLineArrayIdxMap = make(map[int]int)
+		rowMap                 = make(map[string]map[string]any)
+		multiLineArrayRowCount = make(map[string]int)
+		multiLineArrayIdxMap   = make(map[int]int)
 	)
 	rows = rows[headerRows:]
 
@@ -128,7 +143,12 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 	for i := range rows {
 		id := rows[i][0]
 		if value, ok := rowMap[id]; ok {
-			multiLineArrayIdxMap[i]++
+			if _, ok := multiLineArrayRowCount[id]; !ok {
+				multiLineArrayRowCount[id] = 2
+			} else {
+				multiLineArrayRowCount[id]++
+			}
+			multiLineArrayIdxMap[i] = multiLineArrayRowCount[id] - 1
 		} else {
 			idValue, err := parseGoValue(types[0], id)
 			if err != nil {
@@ -176,12 +196,12 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 				}
 				multiLineArrayField = field
 				field.Name = field.Name[len("[]"):]
-				field.IsArray = true
+				field.IsMultiLineArray = true
 			}
 
 			if i == tokenLen-1 {
 				field.Type = types[col]
-				field.IsArray = field.IsArray || isCellArray
+				field.IsCellArray = isCellArray
 			} else {
 				field.Type = "struct"
 			}
@@ -202,35 +222,50 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 		}
 	}
 
+	defers := make([]func(), 0)
+
 	var visitField func(container map[string]any, field *TableField, rowIdx int, row []string) error
 	visitField = func(container map[string]any, field *TableField, rowIdx int, row []string) error {
 		multiLineArrayIdx := multiLineArrayIdxMap[rowIdx]
 
 		// skip if it's non array fields
 		if multiLineArrayIdx > 0 {
-			isArrayField := false
+			isInMultiLineArray := false
 			for f := field; f != nil; f = f.ParentField {
-				if f.IsArray {
-					isArrayField = true
+				if f.IsMultiLineArray {
+					isInMultiLineArray = true
 					break
 				}
 			}
-			if !isArrayField {
+			if !isInMultiLineArray {
 				return nil
 			}
 		}
 
 		if len(field.StructFields) > 0 {
-			if field.IsArray {
+			if field.IsMultiLineArray {
 				// fill struct array container
 				objectArrayValue, ok := container[field.Name]
 				if !ok {
 					objectArrayValue = make([]map[string]any, 0)
 				}
 				objectArray := objectArrayValue.([]map[string]any)
-				//log.Printf("%s, %s, %s, %d, %d, %d", table.Name, field.Name, row[0], rowIdx, len(objectArray), multiLineArrayIdx)
 				if len(objectArray) <= multiLineArrayIdx {
-					objectArray = append(objectArray, make(map[string]any))
+					v := make(map[string]any)
+					objectArray = append(objectArray, v)
+
+					// remove the object if all cells are empty
+					if checkAllCellsEmpty(field, row) {
+						container := container // capture for closure
+						defers = append(defers, func() {
+							container[field.Name] = internal.RemoveOne(
+								container[field.Name].([]map[string]any),
+								func(m map[string]any) bool {
+									return internal.EqualPtr(m, v)
+								},
+							)
+						})
+					}
 				}
 				container[field.Name] = objectArray
 				container = objectArray[multiLineArrayIdx]
@@ -252,7 +287,7 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 				}
 			}
 
-		} else if field.IsArray {
+		} else if field.IsCellArray {
 			// fill array value
 			cell := row[field.column]
 			var arr []any
@@ -291,6 +326,11 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 			}
 		}
 	}
+
+	for _, deferFunc := range defers {
+		deferFunc()
+	}
+
 	return &table, nil
 }
 
