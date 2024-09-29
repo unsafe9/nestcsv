@@ -28,3 +28,8 @@ go.work.sum
 .idea/
 .vscode/
 *.iml
+debug/
+
+# Google Apps Script
+.clasprc.json
+node_modules/

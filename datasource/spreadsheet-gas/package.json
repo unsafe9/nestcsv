@@ -1,0 +1,17 @@
+{
+  "name": "spreadsheet-gas",
+  "version": "1.0.0",
+  "description": "A Google Apps Script web app project to get Spreadsheet data.",
+  "author": "realkorokke@outlook.com",
+  "license": "MIT",
+  "main": "app.js",
+  "scripts": {
+    "login": "clasp login",
+    "deploy": "clasp push && clasp deploy",
+    "open": "clasp open"
+  },
+  "dependencies": {
+    "@google/clasp": "^2.4.2",
+    "@types/google-apps-script": "^1.0.83"
+  }
+}
