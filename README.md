@@ -7,4 +7,6 @@ A Go CLI tool that analyzes CSV data based on a predefined schema and converts i
 - [ ] Add google oauth2 authentication for google apps scripts
 - [ ] Add spreadsheet datasource using sheets api
 - [ ] Add ms excel datasource
+- [ ] Extract time format into the config file
+- [ ] Add code generation for the schema
 - 
