@@ -87,7 +87,10 @@ func (t *Table) SaveAsJson(option *TableSaveOption) error {
 }
 
 func ParseTable(fileName string, csvData []byte) (*Table, error) {
-	rows, err := csv.NewReader(bytes.NewReader(csvData)).ReadAll()
+	reader := csv.NewReader(bytes.NewReader(csvData))
+	reader.Comment = '#'
+	reader.TrimLeadingSpace = true
+	rows, err := reader.ReadAll()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read the csv: %s, %w", fileName, err)
 	}
