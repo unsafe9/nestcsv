@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"github.com/unsafe9/nestcsv/internal"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -18,6 +19,7 @@ type TableField struct {
 	IsArray      bool
 	StructFields []*TableField
 	ParentField  *TableField
+	column       int
 }
 
 type Table struct {
@@ -55,7 +57,7 @@ func (t *Table) SaveAsJson(option *TableSaveOption) error {
 		for _, v := range t.Values {
 			idStr := fmt.Sprint(v[idKey])
 			if option.DropID {
-				v = shallowCopyMap(v)
+				v = internal.ShallowCopyMap(v)
 				delete(v, idKey)
 			}
 			m[idStr] = v
@@ -66,7 +68,7 @@ func (t *Table) SaveAsJson(option *TableSaveOption) error {
 		if option.DropID {
 			arr := make([]map[string]any, len(t.Values))
 			for i, v := range t.Values {
-				v = shallowCopyMap(v)
+				v = internal.ShallowCopyMap(v)
 				delete(v, idKey)
 				arr[i] = v
 			}
@@ -108,7 +110,7 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 		table   = Table{
 			Name:   fileName,
 			Fields: make([]*TableField, 0, colLen),
-			Values: make([]map[string]any, dataLen),
+			Values: make([]map[string]any, 0, dataLen),
 		}
 		rowMap               = make(map[string]map[string]any)
 		multiLineArrayIdxMap = make(map[int]int)
@@ -126,7 +128,6 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 	for i := range rows {
 		id := rows[i][0]
 		if value, ok := rowMap[id]; ok {
-			table.Values[i] = value
 			multiLineArrayIdxMap[i]++
 		} else {
 			idValue, err := parseGoValue(types[0], id)
@@ -136,7 +137,7 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 			value = map[string]any{
 				names[0]: idValue,
 			}
-			table.Values[i] = value
+			table.Values = append(table.Values, value)
 			rowMap[id] = value
 		}
 	}
@@ -148,7 +149,6 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 
 		nameTokens := strings.Split(names[col], ".")
 		tokenLen := len(nameTokens)
-		tokenFields := make([]*TableField, tokenLen)
 
 		isCellArray := strings.HasPrefix(types[col], "[]")
 		if isCellArray {
@@ -158,27 +158,23 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 			}
 		}
 
-		isInMultiLineArray := false
+		var (
+			multiLineArrayField *TableField
+			parentField         *TableField
+		)
 
 		for i := 0; i < tokenLen; i++ {
 			field := &TableField{
-				Name: nameTokens[i],
-			}
-			tokenFields[i] = field
-
-			if i == 0 {
-				table.Fields = append(table.Fields, field)
-			} else {
-				field.ParentField = tokenFields[i-1]
-				field.ParentField.StructFields = append(field.ParentField.StructFields, field)
+				Name:   nameTokens[i],
+				column: col,
 			}
 
 			isMultiLineArray := strings.HasPrefix(field.Name, "[]")
 			if isMultiLineArray {
-				if isInMultiLineArray {
+				if multiLineArrayField != nil {
 					return nil, fmt.Errorf("nested multi-line array is not allowed: %s, %s", table.Name, field.Name)
 				}
-				isInMultiLineArray = true
+				multiLineArrayField = field
 				field.Name = field.Name[len("[]"):]
 				field.IsArray = true
 			}
@@ -190,75 +186,108 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 				field.Type = "struct"
 			}
 
-			for j, row := range rows {
-				if multiLineArrayIdxMap[j] > 0 && !isInMultiLineArray {
-					continue
+			if parentField != nil {
+				field.ParentField = parentField
+				parentField.StructFields = append(parentField.StructFields, field)
+				parentField = field
+			} else {
+				parentField = internal.FindPtr(table.Fields, func(f *TableField) bool {
+					return f.Name == field.Name
+				})
+				if parentField == nil {
+					parentField = field
+					table.Fields = append(table.Fields, field)
 				}
+			}
+		}
+	}
 
-				container := table.Values[j]
-				for _, tokenField := range tokenFields[:i] {
-					switch v := container[tokenField.Name].(type) {
-					case map[string]any:
-						container = v
-					case []map[string]any:
-						idx := multiLineArrayIdxMap[j]
-						if len(v) <= idx {
-							v = append(v, make(map[string]any))
-							container[tokenField.Name] = v
-						}
-						container = v[idx]
-					default:
-						return nil, fmt.Errorf("invalid container type: %s, %s, %d", table.Name, tokenField.Name, j)
-					}
+	var visitField func(container map[string]any, field *TableField, rowIdx int, row []string) error
+	visitField = func(container map[string]any, field *TableField, rowIdx int, row []string) error {
+		multiLineArrayIdx := multiLineArrayIdxMap[rowIdx]
+
+		// skip if it's non array fields
+		if multiLineArrayIdx > 0 {
+			isArrayField := false
+			for f := field; f != nil; f = f.ParentField {
+				if f.IsArray {
+					isArrayField = true
+					break
 				}
+			}
+			if !isArrayField {
+				return nil
+			}
+		}
 
-				if i < tokenLen-1 {
-					if field.IsArray {
-						if _, ok := container[field.Name]; !ok {
-							container[field.Name] = make([]map[string]any, 0)
-						}
-					} else {
-						if _, ok := container[field.Name]; !ok {
-							container[field.Name] = make(map[string]any)
-						}
-					}
-					continue
+		if len(field.StructFields) > 0 {
+			if field.IsArray {
+				// fill struct array container
+				objectArrayValue, ok := container[field.Name]
+				if !ok {
+					objectArrayValue = make([]map[string]any, 0)
 				}
-
-				if field.IsArray {
-					if _, ok := container[field.Name]; !ok {
-						container[field.Name] = make([]any, 0)
-					}
+				objectArray := objectArrayValue.([]map[string]any)
+				//log.Printf("%s, %s, %s, %d, %d, %d", table.Name, field.Name, row[0], rowIdx, len(objectArray), multiLineArrayIdx)
+				if len(objectArray) <= multiLineArrayIdx {
+					objectArray = append(objectArray, make(map[string]any))
 				}
+				container[field.Name] = objectArray
+				container = objectArray[multiLineArrayIdx]
 
-				cell := row[col]
-				if isCellArray {
-					var arr []any
-					if len(cell) > 0 {
-						cells := strings.Split(cell, ",")
-						for _, elem := range cells {
-							v, err := parseGoValue(field.Type, elem)
-							if err != nil {
-								return nil, fmt.Errorf("failed to parse array value: %s, %s, %d, %s, %w", table.Name, field.Name, j, cell, err)
-							}
-							arr = append(arr, v)
-						}
-					} else {
-						arr = make([]any, 0)
-					}
-					container[field.Name] = arr
+			} else {
+				// fill struct container
+				objectValue, ok := container[field.Name]
+				if !ok {
+					objectValue = make(map[string]any)
+					container[field.Name] = objectValue
+				}
+				container = objectValue.(map[string]any)
+			}
 
-				} else {
-					v, err := parseGoValue(field.Type, cell)
+			// fill struct fields recursively
+			for _, structField := range field.StructFields {
+				if err := visitField(container, structField, rowIdx, row); err != nil {
+					return err
+				}
+			}
+
+		} else if field.IsArray {
+			// fill array value
+			cell := row[field.column]
+			var arr []any
+			if len(cell) > 0 {
+				cells := strings.Split(cell, ",")
+				for _, elem := range cells {
+					v, err := parseGoValue(field.Type, elem)
 					if err != nil {
-						return nil, fmt.Errorf("failed to parse value: %s, %s, %d, %s, %w", table.Name, field.Name, j, cell, err)
+						return fmt.Errorf("failed to parse array value: %s, %s, %d, %s, %w", table.Name, field.Name, rowIdx, cell, err)
 					}
-					if field.IsArray {
-						container[field.Name] = append(container[field.Name].([]any), v)
-					} else {
-						container[field.Name] = v
-					}
+					arr = append(arr, v)
 				}
+			} else {
+				arr = make([]any, 0)
+			}
+			container[field.Name] = arr
+
+		} else {
+			// fill single value
+			cell := row[field.column]
+			v, err := parseGoValue(field.Type, cell)
+			if err != nil {
+				return fmt.Errorf("failed to parse value: %s, %s, %d, %s, %w", table.Name, field.Name, rowIdx, cell, err)
+			}
+			container[field.Name] = v
+		}
+
+		return nil
+	}
+
+	for rowIdx, row := range rows {
+		container := rowMap[row[0]]
+		for _, field := range table.Fields {
+			if err := visitField(container, field, rowIdx, row); err != nil {
+				return nil, err
 			}
 		}
 	}
