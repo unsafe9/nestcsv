@@ -153,6 +153,9 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 		isCellArray := strings.HasPrefix(types[col], "[]")
 		if isCellArray {
 			types[col] = types[col][len("[]"):]
+			if types[col] == "json" {
+				return nil, fmt.Errorf("json type is not allowed for cell array: %s, %s", table.Name, names[col])
+			}
 		}
 
 		isInMultiLineArray := false
@@ -291,6 +294,15 @@ func parseGoValue(typ, cell string) (any, error) {
 			return false, nil
 		}
 		return strconv.ParseBool(cell)
+	case "json":
+		if cell == "" {
+			return nil, nil
+		}
+		v := new(any)
+		if err := json.Unmarshal([]byte(cell), v); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal json: %s, %w", cell, err)
+		}
+		return v, nil
 	default:
 		return nil, fmt.Errorf("unknown type: %s", typ)
 	}
