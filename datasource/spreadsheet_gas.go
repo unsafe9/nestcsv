@@ -9,14 +9,14 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"path/filepath"
 )
 
 type GASOption struct {
-	URL                string
-	Password           string
-	GDriveFolderIDs    []string
-	SpreadsheetFileIDs []string
+	URL                  string   `yaml:"url"`
+	Password             string   `yaml:"password"`
+	GoogleDriveFolderIDs []string `yaml:"google_drive_folder_ids"`
+	SpreadsheetFileIDs   []string `yaml:"spreadsheet_file_ids"`
+	DebugSaveDir         *string  `yaml:"debug_save_dir,omitempty"`
 
 	// TODO : add google oauth2 authentication
 }
@@ -54,10 +54,13 @@ func CollectSpreadsheetsThroughGAS(out chan<- CSV, option *GASOption) error {
 				return fmt.Errorf("failed to read the file: %s, %w", zipFile.Name, err)
 			}
 
-			out <- CSV{
-				Name: filepath.Base(zipFile.Name),
-				Data: csvData,
+			csv := NewCSV(zipFile.Name, csvData)
+			if option.DebugSaveDir != nil {
+				if err := csv.Save(*option.DebugSaveDir); err != nil {
+					return err
+				}
 			}
+			out <- csv
 			return nil
 		})
 	}
@@ -71,7 +74,7 @@ func callGASAndReadBase64(option *GASOption) ([]byte, error) {
 	}
 	queryValues := url.Values{
 		"password":  {option.Password},
-		"folderIds": option.GDriveFolderIDs,
+		"folderIds": option.GoogleDriveFolderIDs,
 		"fileIds":   option.SpreadsheetFileIDs,
 	}
 	uri.RawQuery = queryValues.Encode()

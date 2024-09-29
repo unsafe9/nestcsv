@@ -27,18 +27,21 @@ type Table struct {
 }
 
 type TableSaveOption struct {
-	OutputDir string
-	Indent    string
-	AsMap     bool
-	DropID    bool
+	RootDir string `yaml:"root_dir"`
+	Indent  string `yaml:"indent"`
+	AsMap   bool   `yaml:"as_map"`
+	DropID  bool   `yaml:"drop_id"`
 }
 
 func (t *Table) SaveAsJson(option *TableSaveOption) error {
-	if option.OutputDir == "" {
-		option.OutputDir = "."
+	if option.RootDir == "" {
+		option.RootDir = "."
+	}
+	if err := os.MkdirAll(option.RootDir, os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create the directory: %s, %w", option.RootDir, err)
 	}
 
-	file, err := os.Create(filepath.Join(option.OutputDir, t.Name+".json"))
+	file, err := os.Create(filepath.Join(option.RootDir, t.Name+".json"))
 	if err != nil {
 		return fmt.Errorf("failed to create the file: %s, %w", t.Name, err)
 	}
