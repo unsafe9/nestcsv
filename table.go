@@ -150,9 +150,9 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 		tokenLen := len(nameTokens)
 		tokenFields := make([]*TableField, tokenLen)
 
-		isCellArray := strings.HasSuffix(types[col], "_array")
+		isCellArray := strings.HasPrefix(types[col], "[]")
 		if isCellArray {
-			types[col] = types[col][:len(types[col])-len("_array")]
+			types[col] = types[col][len("[]"):]
 		}
 
 		isInMultiLineArray := false
