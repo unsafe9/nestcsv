@@ -19,6 +19,14 @@ datasource:
     spreadsheet_file_ids:
       - <YOUR_GOOGLE_SPREADSHEET_FILE_ID>
     debug_save_dir: ./debug
+  excel:
+    directories:
+      - <YOUR_EXCEL_FILE_DIRECTORY>
+    extensions:
+      - .xlsx
+    files:
+      - <YOUR_EXCEL_FILE>
+    debug_save_dir: ./debug
   #local_file:
   #  root_dir: ./debug
 
@@ -40,11 +48,10 @@ nestcsv -c ../config/config.yaml
 ## How to structure the schema
 See [examples](./examples)
 
-## TODO
+## 0.0.1 Roadmap
 - [ ] Add schema structure guide
 - [ ] Add google oauth2 authentication for google apps scripts
 - [ ] Add spreadsheet datasource using sheets api
-- [ ] Add ms excel datasource
 - [ ] Extract time format into the config file
 - [ ] Add code generation for the schema
 - 

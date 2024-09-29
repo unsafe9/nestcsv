@@ -14,6 +14,7 @@ import (
 type Config struct {
 	Datasource struct {
 		SpreadsheetGAS *datasource.GASOption       `yaml:"spreadsheet_gas,omitempty"`
+		Excel          *datasource.ExcelOption     `yaml:"excel,omitempty"`
 		LocalFile      *datasource.LocalFileOption `yaml:"local_file,omitempty"`
 	} `yaml:"datasource"`
 
@@ -42,6 +43,11 @@ func main() {
 		if config.Datasource.SpreadsheetGAS != nil {
 			datasourceWaitGroup.Go(func() error {
 				return datasource.CollectSpreadsheetsThroughGAS(out, config.Datasource.SpreadsheetGAS)
+			})
+		}
+		if config.Datasource.Excel != nil {
+			datasourceWaitGroup.Go(func() error {
+				return datasource.CollectExcelFiles(out, config.Datasource.Excel)
 			})
 		}
 		if config.Datasource.LocalFile != nil {
