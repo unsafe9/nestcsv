@@ -132,13 +132,15 @@ func ParseTable(fileName string, rows [][]string) (*Table, error) {
 	})
 	for i := 0; i < dataLen; i++ {
 		id := rows[i][0]
-		if strings.HasPrefix(id, "#") {
+
+		// drop the row if the id is empty or starts with #
+		if id == "" || strings.HasPrefix(id, "#") {
 			rows = append(rows[:i], rows[i+1:]...)
 			i--
 			dataLen--
 			continue
 		}
-	
+
 		if value, ok := rowMap[id]; ok {
 			if _, ok := multiLineArrayRowCount[id]; !ok {
 				multiLineArrayRowCount[id] = 2
