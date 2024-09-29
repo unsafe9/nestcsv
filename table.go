@@ -53,11 +53,12 @@ func (t *Table) SaveAsJson(option *TableSaveOption) error {
 	if option.AsMap {
 		m := make(map[string]any)
 		for _, v := range t.Values {
+			idStr := fmt.Sprint(v[idKey])
 			if option.DropID {
 				v = shallowCopyMap(v)
 				delete(v, idKey)
 			}
-			m[fmt.Sprint(v[idKey])] = v
+			m[idStr] = v
 		}
 		values = m
 
@@ -115,6 +116,10 @@ func ParseTable(fileName string, csvData []byte) (*Table, error) {
 	if strings.Contains(names[0], ".") || (types[0] != "int" && types[0] != "long" && types[0] != "string") {
 		return nil, fmt.Errorf("invalid index field: %s, %s, %s", table.Name, names[0], types[0])
 	}
+	table.Fields = append(table.Fields, &TableField{
+		Name: names[0],
+		Type: types[0],
+	})
 	for i := range rows {
 		id := rows[i][0]
 		if value, ok := rowMap[id]; ok {
