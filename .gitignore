@@ -30,6 +30,3 @@ go.work.sum
 *.iml
 debug/
 
-# Google Apps Script
-.clasprc.json
-node_modules/
