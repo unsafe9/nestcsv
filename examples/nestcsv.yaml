@@ -1,0 +1,10 @@
+datasource:
+  local_file:
+    root_dir: ./csv
+
+output:
+  indent: "  "
+  root_dir: ./json
+  as_map: false
+  drop_id: false
+  

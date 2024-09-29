@@ -1,0 +1,54 @@
+[
+  {
+    "ID": 1,
+    "Rewards": [
+      {
+        "ParamType": "Int",
+        "ParamValue": {
+          "Float": 0,
+          "Int": 10,
+          "Str": ""
+        },
+        "Type": "Gold"
+      },
+      {
+        "ParamType": "Str",
+        "ParamValue": {
+          "Float": 0,
+          "Int": 0,
+          "Str": "Weapon"
+        },
+        "Type": "Gear"
+      }
+    ],
+    "SKU": {
+      "Apple": "IAP_Apple_1",
+      "Google": "IAP_Google_1"
+    },
+    "Tags": [
+      "gold",
+      "package"
+    ]
+  },
+  {
+    "ID": 2,
+    "Rewards": [
+      {
+        "ParamType": "Float",
+        "ParamValue": {
+          "Float": 0.5,
+          "Int": 0,
+          "Str": ""
+        },
+        "Type": "Dollar"
+      }
+    ],
+    "SKU": {
+      "Apple": "IAP_Apple_2",
+      "Google": "IAP_Google_2"
+    },
+    "Tags": [
+      "dollar"
+    ]
+  }
+]
