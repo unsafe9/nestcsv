@@ -221,8 +221,6 @@ func ParseTable(fileName string, rows [][]string) (*Table, error) {
 		}
 	}
 
-	defers := make([]func(), 0)
-
 	var visitField func(container map[string]any, field *TableField, rowIdx int, row []string) error
 	visitField = func(container map[string]any, field *TableField, rowIdx int, row []string) error {
 		multiLineArrayIdx := multiLineArrayIdxMap[rowIdx]
@@ -255,15 +253,14 @@ func ParseTable(fileName string, rows [][]string) (*Table, error) {
 
 					// remove the object if all cells are empty
 					if checkAllCellsEmpty(field, row) {
-						container := container // capture for closure
-						defers = append(defers, func() {
+						defer func(container map[string]any) {
 							container[field.Name] = internal.RemoveOne(
 								container[field.Name].([]map[string]any),
 								func(m map[string]any) bool {
 									return internal.EqualPtr(m, v)
 								},
 							)
-						})
+						}(container)
 					}
 				}
 				container[field.Name] = objectArray
@@ -324,10 +321,6 @@ func ParseTable(fileName string, rows [][]string) (*Table, error) {
 				return nil, err
 			}
 		}
-	}
-
-	for _, deferFunc := range defers {
-		deferFunc()
 	}
 
 	return &table, nil

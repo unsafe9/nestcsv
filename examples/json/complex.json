@@ -21,10 +21,12 @@
         "Type": "Gear"
       }
     ],
-    "SKU": {
-      "Apple": "IAP_Apple_1",
-      "Google": "IAP_Google_1"
-    },
+    "SKU": [
+      {
+        "ID": "IAP_Google_1",
+        "Type": "Google"
+      }
+    ],
     "Tags": [
       "gold",
       "package"
@@ -41,12 +43,36 @@
           "Str": ""
         },
         "Type": "Dollar"
+      },
+      {
+        "ParamType": "Float",
+        "ParamValue": {
+          "Float": 0.8,
+          "Int": 0,
+          "Str": ""
+        },
+        "Type": "Dollar"
+      },
+      {
+        "ParamType": "Float",
+        "ParamValue": {
+          "Float": 0.9,
+          "Int": 0,
+          "Str": ""
+        },
+        "Type": "Dollar"
       }
     ],
-    "SKU": {
-      "Apple": "IAP_Apple_2",
-      "Google": "IAP_Google_2"
-    },
+    "SKU": [
+      {
+        "ID": "IAP_Google_2",
+        "Type": "Google"
+      },
+      {
+        "ID": "IAP_Apple_2",
+        "Type": "Apple"
+      }
+    ],
     "Tags": [
       "dollar"
     ]
