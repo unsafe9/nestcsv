@@ -1,6 +1,7 @@
 datasource:
-  local_file:
-    root_dir: ./csv
+  csv:
+    directories:
+      - ./csv
 
 output:
   indent: "  "

@@ -22,13 +22,16 @@ datasource:
   excel:
     directories:
       - <YOUR_EXCEL_FILE_DIRECTORY>
-    extensions:
-      - .xlsx
     files:
       - <YOUR_EXCEL_FILE>
+    extensions:
+      - .xlsx
     debug_save_dir: ./debug
-  #local_file:
-  #  root_dir: ./debug
+  csv:
+    directories:
+      - <YOUR_CSV_FILE_DIRECTORY>
+    files:
+      - <YOUR_CSV_FILE>
 
 output:
   indent: "  "
@@ -49,9 +52,15 @@ nestcsv -c ../config/config.yaml
 See [examples](./examples)
 
 ## 0.0.1 Roadmap
-- [ ] Add schema structure guide
-- [ ] Add google oauth2 authentication for google apps scripts
-- [ ] Add spreadsheet datasource using sheets api
-- [ ] Extract time format into the config file
-- [ ] Add code generation for the schema
-- 
+### Docs
+- [ ] Add a schema structure guide
+- [ ] Add more examples
+### Datasource
+- [ ] Add Google OAuth2 authentication for Google Apps Script
+- [ ] Integrate spreadsheet datasource using the Sheets API
+### Config
+- [ ] Extract time format settings into the configuration file
+- [ ] Allow overriding configurations for each CSV files
+### Code generation
+- [ ] Implement code generation for the schema
+- [ ] Replace repeated structs into separate, reusable structs

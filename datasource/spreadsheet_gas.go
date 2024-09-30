@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type GASOption struct {
@@ -22,7 +23,7 @@ type GASOption struct {
 	// TODO : add google oauth2 authentication
 }
 
-func CollectSpreadsheetsThroughGAS(out chan<- CSV, option *GASOption) error {
+func CollectSpreadsheetsThroughGAS(out chan<- TableData, option *GASOption) error {
 	zipData, err := callGASAndReadBase64(option)
 	if err != nil {
 		return err
@@ -36,6 +37,9 @@ func CollectSpreadsheetsThroughGAS(out chan<- CSV, option *GASOption) error {
 	ch := make(chan *zip.File, 1000)
 	go func() {
 		for _, zipFile := range zipReader.File {
+			if strings.HasPrefix(zipFile.Name, "#") {
+				continue
+			}
 			ch <- zipFile
 		}
 		close(ch)
@@ -55,7 +59,7 @@ func CollectSpreadsheetsThroughGAS(out chan<- CSV, option *GASOption) error {
 				return fmt.Errorf("failed to read the file: %s, %w", zipFile.Name, err)
 			}
 
-			csvData := NewCSV(zipFile.Name, rows)
+			csvData := NewTableData(zipFile.Name, rows)
 			if option.DebugSaveDir != nil {
 				if err := csvData.Save(*option.DebugSaveDir); err != nil {
 					return err

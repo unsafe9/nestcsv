@@ -13,9 +13,9 @@ import (
 
 type Config struct {
 	Datasource struct {
-		SpreadsheetGAS *datasource.GASOption       `yaml:"spreadsheet_gas,omitempty"`
-		Excel          *datasource.ExcelOption     `yaml:"excel,omitempty"`
-		LocalFile      *datasource.LocalFileOption `yaml:"local_file,omitempty"`
+		SpreadsheetGAS *datasource.GASOption   `yaml:"spreadsheet_gas,omitempty"`
+		Excel          *datasource.ExcelOption `yaml:"excel,omitempty"`
+		CSV            *datasource.CSVOption   `yaml:"csv,omitempty"`
 	} `yaml:"datasource"`
 
 	Output *nestcsv.TableSaveOption `yaml:"output"`
@@ -34,7 +34,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	out := make(chan datasource.CSV, 1000)
+	out := make(chan datasource.TableData, 1000)
 
 	go func() {
 		defer close(out)
@@ -50,9 +50,9 @@ func main() {
 				return datasource.CollectExcelFiles(out, config.Datasource.Excel)
 			})
 		}
-		if config.Datasource.LocalFile != nil {
+		if config.Datasource.CSV != nil {
 			datasourceWaitGroup.Go(func() error {
-				return datasource.CollectLocalFiles(out, config.Datasource.LocalFile)
+				return datasource.CollectCSVFiles(out, config.Datasource.CSV)
 			})
 		}
 		if err := datasourceWaitGroup.Wait(); err != nil {

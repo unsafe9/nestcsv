@@ -2,36 +2,47 @@ package datasource
 
 import (
 	"encoding/csv"
-	"fmt"
+	"github.com/unsafe9/nestcsv/internal"
+	"golang.org/x/sync/errgroup"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-type CSV struct {
-	Name string
-	Rows [][]string
+type CSVOption struct {
+	Directories []string `yaml:"directories"`
+	Files       []string `yaml:"files"`
 }
 
-func NewCSV(name string, rows [][]string) CSV {
-	return CSV{
-		Name: strings.TrimSuffix(filepath.Base(name), ".csv"),
-		Rows: rows,
-	}
-}
+func CollectCSVFiles(out chan<- TableData, option *CSVOption) error {
+	ch := make(chan string, 1000)
+	go func() {
+		for path := range internal.WalkFiles(option.Directories, option.Files, []string{"csv"}) {
+			if strings.HasPrefix(filepath.Base(path), "#") {
+				continue
+			}
+			ch <- path
+		}
+		close(ch)
+	}()
 
-func (c *CSV) Save(rootDir string) error {
-	if err := os.MkdirAll(rootDir, os.ModePerm); err != nil {
-		return fmt.Errorf("failed to create the directory: %s, %w", rootDir, err)
-	}
-	file, err := os.Create(filepath.Join(rootDir, c.Name+".csv"))
-	if err != nil {
-		return fmt.Errorf("failed to create the file: %s, %w", c.Name, err)
-	}
-	defer file.Close()
+	var wg errgroup.Group
+	for path := range ch {
+		wg.Go(func() error {
+			file, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
 
-	if err := csv.NewWriter(file).WriteAll(c.Rows); err != nil {
-		return fmt.Errorf("failed to write the file: %s, %w", c.Name, err)
+			rows, err := csv.NewReader(file).ReadAll()
+			if err != nil {
+				return err
+			}
+
+			out <- NewTableData(path, rows)
+			return nil
+		})
 	}
-	return nil
+	return wg.Wait()
 }
