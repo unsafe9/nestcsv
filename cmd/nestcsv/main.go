@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/unsafe9/nestcsv"
-	"github.com/unsafe9/nestcsv/datasource"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v3"
 	"log"
@@ -13,9 +12,9 @@ import (
 
 type Config struct {
 	Datasource struct {
-		SpreadsheetGAS *datasource.GASOption   `yaml:"spreadsheet_gas,omitempty"`
-		Excel          *datasource.ExcelOption `yaml:"excel,omitempty"`
-		CSV            *datasource.CSVOption   `yaml:"csv,omitempty"`
+		SpreadsheetGAS *nestcsv.GASOption   `yaml:"spreadsheet_gas,omitempty"`
+		Excel          *nestcsv.ExcelOption `yaml:"excel,omitempty"`
+		CSV            *nestcsv.CSVOption   `yaml:"csv,omitempty"`
 	} `yaml:"datasource"`
 
 	Output *nestcsv.TableSaveOption `yaml:"output"`
@@ -34,35 +33,35 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	out := make(chan datasource.TableData, 1000)
+	out := make(chan nestcsv.TableData, 1000)
 
 	go func() {
 		defer close(out)
 
-		var datasourceWaitGroup errgroup.Group
+		var wg errgroup.Group
 		if config.Datasource.SpreadsheetGAS != nil {
-			datasourceWaitGroup.Go(func() error {
-				return datasource.CollectSpreadsheetsThroughGAS(out, config.Datasource.SpreadsheetGAS)
+			wg.Go(func() error {
+				return nestcsv.CollectSpreadsheetsThroughGAS(out, config.Datasource.SpreadsheetGAS)
 			})
 		}
 		if config.Datasource.Excel != nil {
-			datasourceWaitGroup.Go(func() error {
-				return datasource.CollectExcelFiles(out, config.Datasource.Excel)
+			wg.Go(func() error {
+				return nestcsv.CollectExcelFiles(out, config.Datasource.Excel)
 			})
 		}
 		if config.Datasource.CSV != nil {
-			datasourceWaitGroup.Go(func() error {
-				return datasource.CollectCSVFiles(out, config.Datasource.CSV)
+			wg.Go(func() error {
+				return nestcsv.CollectCSVFiles(out, config.Datasource.CSV)
 			})
 		}
-		if err := datasourceWaitGroup.Wait(); err != nil {
+		if err := wg.Wait(); err != nil {
 			log.Fatalf("failed to collect data: %v", err)
 		}
 	}()
 
-	var tableWaitGroup errgroup.Group
+	var wg errgroup.Group
 	for csv := range out {
-		tableWaitGroup.Go(func() error {
+		wg.Go(func() error {
 			table, err := nestcsv.ParseTable(csv.Name, csv.Rows)
 			if err != nil {
 				return err
@@ -70,7 +69,7 @@ func main() {
 			return table.SaveAsJson(config.Output)
 		})
 	}
-	if err := tableWaitGroup.Wait(); err != nil {
+	if err := wg.Wait(); err != nil {
 		log.Fatalf("failed to save table: %v", err)
 	}
 }

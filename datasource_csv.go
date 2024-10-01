@@ -1,8 +1,7 @@
-package datasource
+package nestcsv
 
 import (
 	"encoding/csv"
-	"github.com/unsafe9/nestcsv/internal"
 	"golang.org/x/sync/errgroup"
 	"os"
 	"path/filepath"
@@ -17,7 +16,7 @@ type CSVOption struct {
 func CollectCSVFiles(out chan<- TableData, option *CSVOption) error {
 	ch := make(chan string, 1000)
 	go func() {
-		for path := range internal.WalkFiles(option.Directories, option.Files, []string{"csv"}) {
+		for path := range walkFiles(option.Directories, option.Files, []string{"csv"}) {
 			if strings.HasPrefix(filepath.Base(path), "#") {
 				continue
 			}

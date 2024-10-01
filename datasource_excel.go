@@ -1,8 +1,7 @@
-package datasource
+package nestcsv
 
 import (
 	"fmt"
-	"github.com/unsafe9/nestcsv/internal"
 	"github.com/xuri/excelize/v2"
 	"golang.org/x/sync/errgroup"
 	"path/filepath"
@@ -23,7 +22,7 @@ func CollectExcelFiles(out chan<- TableData, option *ExcelOption) error {
 
 	ch := make(chan string, 1000)
 	go func() {
-		for path := range internal.WalkFiles(option.Directories, option.Files, option.Extensions) {
+		for path := range walkFiles(option.Directories, option.Files, option.Extensions) {
 			if strings.HasPrefix(filepath.Base(path), "#") {
 				continue
 			}

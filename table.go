@@ -3,7 +3,6 @@ package nestcsv
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/unsafe9/nestcsv/internal"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -56,7 +55,7 @@ func (t *Table) SaveAsJson(option *TableSaveOption) error {
 		for _, v := range t.Values {
 			idStr := fmt.Sprint(v[idKey])
 			if option.DropID {
-				v = internal.ShallowCopyMap(v)
+				v = shallowCopyMap(v)
 				delete(v, idKey)
 			}
 			m[idStr] = v
@@ -67,7 +66,7 @@ func (t *Table) SaveAsJson(option *TableSaveOption) error {
 		if option.DropID {
 			arr := make([]map[string]any, len(t.Values))
 			for i, v := range t.Values {
-				v = internal.ShallowCopyMap(v)
+				v = shallowCopyMap(v)
 				delete(v, idKey)
 				arr[i] = v
 			}
@@ -97,7 +96,7 @@ func checkAllCellsEmpty(field *TableField, row []string) bool {
 		}
 	}
 	visitField(field)
-	return internal.IsAllEmpty(cells)
+	return isAllEmpty(cells)
 }
 
 func ParseTable(fileName string, rows [][]string) (*Table, error) {
@@ -210,7 +209,7 @@ func ParseTable(fileName string, rows [][]string) (*Table, error) {
 				parentField.StructFields = append(parentField.StructFields, field)
 				parentField = field
 			} else {
-				parentField = internal.FindPtr(table.Fields, func(f *TableField) bool {
+				parentField = findPtr(table.Fields, func(f *TableField) bool {
 					return f.Name == field.Name
 				})
 				if parentField == nil {
@@ -254,10 +253,10 @@ func ParseTable(fileName string, rows [][]string) (*Table, error) {
 					// remove the object if all cells are empty
 					if checkAllCellsEmpty(field, row) {
 						defer func(container map[string]any) {
-							container[field.Name] = internal.RemoveOne(
+							container[field.Name] = removeOne(
 								container[field.Name].([]map[string]any),
 								func(m map[string]any) bool {
-									return internal.EqualPtr(m, v)
+									return equalPtr(m, v)
 								},
 							)
 						}(container)

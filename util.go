@@ -1,4 +1,4 @@
-package internal
+package nestcsv
 
 import (
 	"io/fs"
@@ -8,7 +8,7 @@ import (
 	"slices"
 )
 
-func ShallowCopyMap[K comparable, V any](m map[K]V) map[K]V {
+func shallowCopyMap[K comparable, V any](m map[K]V) map[K]V {
 	clone := make(map[K]V)
 	for k, v := range m {
 		clone[k] = v
@@ -16,7 +16,7 @@ func ShallowCopyMap[K comparable, V any](m map[K]V) map[K]V {
 	return clone
 }
 
-func FindPtr[T any](arr []*T, f func(*T) bool) *T {
+func findPtr[T any](arr []*T, f func(*T) bool) *T {
 	for _, v := range arr {
 		if f(v) {
 			return v
@@ -25,7 +25,7 @@ func FindPtr[T any](arr []*T, f func(*T) bool) *T {
 	return nil
 }
 
-func IsAllEmpty(arr []string) bool {
+func isAllEmpty(arr []string) bool {
 	for _, v := range arr {
 		if v != "" {
 			return false
@@ -34,11 +34,11 @@ func IsAllEmpty(arr []string) bool {
 	return true
 }
 
-func EqualPtr(a, b any) bool {
+func equalPtr(a, b any) bool {
 	return reflect.ValueOf(a).Pointer() == reflect.ValueOf(b).Pointer()
 }
 
-func RemoveOne[T any](arr []T, f func(T) bool) []T {
+func removeOne[T any](arr []T, f func(T) bool) []T {
 	for i := range arr {
 		if f(arr[i]) {
 			return append(arr[:i], arr[i+1:]...)
@@ -47,7 +47,7 @@ func RemoveOne[T any](arr []T, f func(T) bool) []T {
 	return arr
 }
 
-func WalkFiles(dirs []string, files []string, exts []string) iter.Seq[string] {
+func walkFiles(dirs []string, files []string, exts []string) iter.Seq[string] {
 	return func(yield func(string) bool) {
 		visited := make(map[string]struct{})
 		stop := false

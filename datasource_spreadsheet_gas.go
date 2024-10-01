@@ -1,4 +1,4 @@
-package datasource
+package nestcsv
 
 import (
 	"archive/zip"
