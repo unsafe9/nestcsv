@@ -1,3 +1,4 @@
+drop_id=false&as_map=false&sort_asc_by=ID&type_mapping=Rewards:Reward,,,,,,,,
 ID,Tags,[]SKU.Type,[]SKU.ID,[]Rewards.Type,[]Rewards.ParamType,[]Rewards.ParamValue.Int,[]Rewards.ParamValue.Float,[]Rewards.ParamValue.Str
 int,[]string,string,string,string,string,int,float,string
 ,,,,,,,,

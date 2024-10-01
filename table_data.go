@@ -1,18 +1,17 @@
 package nestcsv
 
 import (
-	"encoding/csv"
 	"fmt"
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 )
 
 const (
-	TableFieldNameRow = 0
-	TableFieldTypeRow = 1
-	TableDataStartRow = 3
+	TableMetadataRow  = 0
+	TableFieldNameRow = 1
+	TableFieldTypeRow = 2
+	TableDataStartRow = 4
 
 	TableFieldIndexCol = 0
 )
@@ -21,6 +20,7 @@ var ErrSkipTable = fmt.Errorf("skip table")
 
 type TableData struct {
 	Name       string
+	Metadata   *TableMetadata
 	Columns    int
 	FieldNames []string
 	FieldTypes []string
@@ -86,28 +86,23 @@ func ParseTableData(name string, csvData [][]string) (*TableData, error) {
 		return nil, fmt.Errorf("invalid index field type: %s, %s, %s", tableName, idxName, idxType)
 	}
 
-	return &TableData{
+	table := &TableData{
 		Name:       tableName,
 		Columns:    columns,
 		FieldNames: fieldNames,
 		FieldTypes: fieldTypes,
 		DataRows:   dataRows,
-	}, nil
+	}
+
+	metadata, err := ParseTableMetadata(csvData[TableMetadataRow][0], table)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse table metadata: %s, %w", name, err)
+	}
+
+	table.Metadata = metadata
+	return table, nil
 }
 
-func (c *TableData) SaveAsCSV(rootDir string) error {
-	if err := os.MkdirAll(rootDir, os.ModePerm); err != nil {
-		return fmt.Errorf("failed to create the directory: %s, %w", rootDir, err)
-	}
-	file, err := os.Create(filepath.Join(rootDir, c.Name+".csv"))
-	if err != nil {
-		return fmt.Errorf("failed to create the file: %s, %w", c.Name, err)
-	}
-	defer file.Close()
-
-	rows := append([][]string{c.FieldNames, c.FieldTypes}, c.DataRows...)
-	if err := csv.NewWriter(file).WriteAll(rows); err != nil {
-		return fmt.Errorf("failed to write the file: %s, %w", c.Name, err)
-	}
-	return nil
+func (c *TableData) CSV() [][]string {
+	return append([][]string{c.FieldNames, c.FieldTypes}, c.DataRows...)
 }

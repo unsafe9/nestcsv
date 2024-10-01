@@ -1,17 +1,24 @@
 package nestcsv
 
 import (
+	"encoding/binary"
+	"encoding/csv"
+	"fmt"
 	"io/fs"
 	"iter"
+	"os"
 	"path/filepath"
 	"reflect"
 	"slices"
+	"strings"
 )
 
-func shallowCopyMap[K comparable, V any](m map[K]V) map[K]V {
+func mapWithoutKey[K comparable, V any](m map[K]V, key K) map[K]V {
 	clone := make(map[K]V)
 	for k, v := range m {
-		clone[k] = v
+		if k != key {
+			clone[k] = v
+		}
 	}
 	return clone
 }
@@ -109,4 +116,64 @@ func walkFiles(dirs []string, files []string, exts []string) iter.Seq[string] {
 			}
 		}
 	}
+}
+
+func createFile(rootDir, fileName, ext string) (*os.File, error) {
+	if err := os.MkdirAll(rootDir, os.ModePerm); err != nil {
+		return nil, fmt.Errorf("failed to create the directory: %s, %w", rootDir, err)
+	}
+
+	ext = "." + strings.TrimPrefix(ext, ".")
+	fileName = strings.TrimSuffix(fileName, ext) + ext
+
+	file, err := os.Create(filepath.Join(rootDir, fileName))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create the file: %s, %w", fileName, err)
+	}
+	return file, nil
+}
+
+func saveCSVFile(rootDir, fileName string, csvData [][]string) error {
+	file, err := createFile(rootDir, fileName, "csv")
+	if err != nil {
+		return fmt.Errorf("failed to create the file: %s, %w", fileName, err)
+	}
+	defer file.Close()
+
+	if err := csv.NewWriter(file).WriteAll(csvData); err != nil {
+		return fmt.Errorf("failed to write the file: %s, %w", fileName, err)
+	}
+	return nil
+}
+
+func saveJSONFile(rootDir, fileName string, jsonBytes []byte) error {
+	file, err := createFile(rootDir, fileName, "json")
+	if err != nil {
+		return fmt.Errorf("failed to create the file: %s, %w", fileName, err)
+	}
+	defer file.Close()
+
+	if _, err := file.Write(jsonBytes); err != nil {
+		return fmt.Errorf("failed to write the file: %s, %w", fileName, err)
+	}
+	return nil
+}
+
+func saveBinFile(rootDir, fileName string, jsonBytes []byte) error {
+	file, err := createFile(rootDir, fileName, "bin")
+	if err != nil {
+		return fmt.Errorf("failed to create the file: %s, %w", fileName, err)
+	}
+	defer file.Close()
+
+	binHeader := make([]byte, 4)
+	binary.BigEndian.PutUint32(binHeader, uint32(len(jsonBytes)))
+	if _, err := file.Write(binHeader); err != nil {
+		return fmt.Errorf("failed to write the binary header: %s, %w", fileName, err)
+	}
+
+	if _, err := file.Write(jsonBytes); err != nil {
+		return fmt.Errorf("failed to write the file: %s, %w", fileName, err)
+	}
+	return nil
 }

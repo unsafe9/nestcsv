@@ -3,8 +3,6 @@ package nestcsv
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -21,90 +19,19 @@ type TableField struct {
 }
 
 type Table struct {
-	Name   string
-	Fields []*TableField
-	Values []map[string]any
-}
-
-type TableSaveOption struct {
-	RootDir string `yaml:"root_dir"`
-	Indent  string `yaml:"indent"`
-	AsMap   bool   `yaml:"as_map"`
-	DropID  bool   `yaml:"drop_id"`
-}
-
-func (t *Table) SaveAsJson(option *TableSaveOption) error {
-	if option.RootDir == "" {
-		option.RootDir = "."
-	}
-	if err := os.MkdirAll(option.RootDir, os.ModePerm); err != nil {
-		return fmt.Errorf("failed to create the directory: %s, %w", option.RootDir, err)
-	}
-
-	file, err := os.Create(filepath.Join(option.RootDir, t.Name+".json"))
-	if err != nil {
-		return fmt.Errorf("failed to create the file: %s, %w", t.Name, err)
-	}
-	defer file.Close()
-
-	idKey := t.Fields[0].Name
-
-	var values any
-	if option.AsMap {
-		m := make(map[string]any)
-		for _, v := range t.Values {
-			idStr := fmt.Sprint(v[idKey])
-			if option.DropID {
-				v = shallowCopyMap(v)
-				delete(v, idKey)
-			}
-			m[idStr] = v
-		}
-		values = m
-
-	} else {
-		if option.DropID {
-			arr := make([]map[string]any, len(t.Values))
-			for i, v := range t.Values {
-				v = shallowCopyMap(v)
-				delete(v, idKey)
-				arr[i] = v
-			}
-			values = arr
-		} else {
-			values = t.Values
-		}
-	}
-
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", option.Indent)
-
-	if err := encoder.Encode(values); err != nil {
-		return fmt.Errorf("failed to encode the json: %s, %w", t.Name, err)
-	}
-
-	return nil
-}
-
-func checkAllCellsEmpty(field *TableField, row []string) bool {
-	var cells []string
-	var visitField func(f *TableField)
-	visitField = func(f *TableField) {
-		cells = append(cells, row[f.column])
-		for _, structField := range f.StructFields {
-			visitField(structField)
-		}
-	}
-	visitField(field)
-	return isAllEmpty(cells)
+	Name     string
+	Metadata *TableMetadata
+	Fields   []*TableField
+	Values   []map[string]any
 }
 
 func ParseTable(td *TableData) (*Table, error) {
 	var (
 		table = Table{
-			Name:   td.Name,
-			Fields: make([]*TableField, 0, td.Columns),
-			Values: make([]map[string]any, 0, len(td.DataRows)),
+			Name:     td.Name,
+			Metadata: td.Metadata,
+			Fields:   make([]*TableField, 0, td.Columns),
+			Values:   make([]map[string]any, 0, len(td.DataRows)),
 		}
 		rowMap                 = make(map[string]map[string]any)
 		multiLineArrayRowCount = make(map[string]int)
@@ -343,4 +270,17 @@ func parseGoValue(typ, cell string) (any, error) {
 	default:
 		return nil, fmt.Errorf("unknown type: %s", typ)
 	}
+}
+
+func checkAllCellsEmpty(field *TableField, row []string) bool {
+	var cells []string
+	var visitField func(f *TableField)
+	visitField = func(f *TableField) {
+		cells = append(cells, row[f.column])
+		for _, structField := range f.StructFields {
+			visitField(structField)
+		}
+	}
+	visitField(field)
+	return isAllEmpty(cells)
 }

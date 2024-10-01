@@ -36,8 +36,7 @@ datasource:
 output:
   indent: "  "
   root_dir: ./output
-  as_map: false
-  drop_id: false
+  file_type: json
 ```
 
 Run the following command:

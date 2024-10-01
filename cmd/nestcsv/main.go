@@ -66,7 +66,7 @@ func main() {
 			if err != nil {
 				return err
 			}
-			return table.SaveAsJson(config.Output)
+			return table.Save(config.Output)
 		})
 	}
 	if err := wg.Wait(); err != nil {

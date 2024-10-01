@@ -68,7 +68,7 @@ func CollectSpreadsheetsThroughGAS(out chan<- *TableData, option *GASOption) err
 				return err
 			}
 			if option.DebugSaveDir != nil {
-				if err := tableData.SaveAsCSV(*option.DebugSaveDir); err != nil {
+				if err := saveCSVFile(*option.DebugSaveDir, tableData.Name, tableData.CSV()); err != nil {
 					return err
 				}
 			}
