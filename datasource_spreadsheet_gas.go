@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"golang.org/x/sync/errgroup"
 	"io"
@@ -23,7 +24,7 @@ type GASOption struct {
 	// TODO : add google oauth2 authentication
 }
 
-func CollectSpreadsheetsThroughGAS(out chan<- TableData, option *GASOption) error {
+func CollectSpreadsheetsThroughGAS(out chan<- *TableData, option *GASOption) error {
 	zipData, err := callGASAndReadBase64(option)
 	if err != nil {
 		return err
@@ -59,13 +60,19 @@ func CollectSpreadsheetsThroughGAS(out chan<- TableData, option *GASOption) erro
 				return fmt.Errorf("failed to read the file: %s, %w", zipFile.Name, err)
 			}
 
-			csvData := NewTableData(zipFile.Name, rows)
+			tableData, err := ParseTableData(zipFile.Name, rows)
+			if err != nil {
+				if errors.Is(err, ErrSkipTable) {
+					return nil
+				}
+				return err
+			}
 			if option.DebugSaveDir != nil {
-				if err := csvData.Save(*option.DebugSaveDir); err != nil {
+				if err := tableData.SaveAsCSV(*option.DebugSaveDir); err != nil {
 					return err
 				}
 			}
-			out <- csvData
+			out <- tableData
 			return nil
 		})
 	}

@@ -2,6 +2,7 @@ package nestcsv
 
 import (
 	"encoding/csv"
+	"errors"
 	"golang.org/x/sync/errgroup"
 	"os"
 	"path/filepath"
@@ -13,7 +14,7 @@ type CSVOption struct {
 	Files       []string `yaml:"files"`
 }
 
-func CollectCSVFiles(out chan<- TableData, option *CSVOption) error {
+func CollectCSVFiles(out chan<- *TableData, option *CSVOption) error {
 	ch := make(chan string, 1000)
 	go func() {
 		for path := range walkFiles(option.Directories, option.Files, []string{"csv"}) {
@@ -39,7 +40,15 @@ func CollectCSVFiles(out chan<- TableData, option *CSVOption) error {
 				return err
 			}
 
-			out <- NewTableData(path, rows)
+			tableData, err := ParseTableData(path, rows)
+			if err != nil {
+				if errors.Is(err, ErrSkipTable) {
+					return nil
+				}
+				return err
+			}
+
+			out <- tableData
 			return nil
 		})
 	}

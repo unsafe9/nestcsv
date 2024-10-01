@@ -99,46 +99,26 @@ func checkAllCellsEmpty(field *TableField, row []string) bool {
 	return isAllEmpty(cells)
 }
 
-func ParseTable(fileName string, rows [][]string) (*Table, error) {
-	const headerRows = 3
-	if len(rows) < headerRows {
-		return nil, fmt.Errorf("invalid csv data: %s", fileName)
-	}
-
+func ParseTable(td *TableData) (*Table, error) {
 	var (
-		names   = rows[0]
-		types   = rows[1]
-		colLen  = len(names)
-		dataLen = len(rows) - headerRows
-		table   = Table{
-			Name:   fileName,
-			Fields: make([]*TableField, 0, colLen),
-			Values: make([]map[string]any, 0, dataLen),
+		table = Table{
+			Name:   td.Name,
+			Fields: make([]*TableField, 0, td.Columns),
+			Values: make([]map[string]any, 0, len(td.DataRows)),
 		}
 		rowMap                 = make(map[string]map[string]any)
 		multiLineArrayRowCount = make(map[string]int)
 		multiLineArrayIdxMap   = make(map[int]int)
 	)
-	rows = rows[headerRows:]
 
-	// pre-process ID field. The first field must be ID.
-	if strings.Contains(names[0], ".") || (types[0] != "int" && types[0] != "long" && types[0] != "string") {
-		return nil, fmt.Errorf("invalid index field: %s, %s, %s", table.Name, names[0], types[0])
+	idField := &TableField{
+		Name: td.FieldNames[TableFieldIndexCol],
+		Type: td.FieldTypes[TableFieldIndexCol],
 	}
-	table.Fields = append(table.Fields, &TableField{
-		Name: names[0],
-		Type: types[0],
-	})
-	for i := 0; i < dataLen; i++ {
-		id := rows[i][0]
+	table.Fields = append(table.Fields, idField)
 
-		// drop the row if the id is empty or starts with #
-		if id == "" || strings.HasPrefix(id, "#") {
-			rows = append(rows[:i], rows[i+1:]...)
-			i--
-			dataLen--
-			continue
-		}
+	for i := 0; i < len(td.DataRows); i++ {
+		id := td.DataRows[i][TableFieldIndexCol]
 
 		if value, ok := rowMap[id]; ok {
 			if _, ok := multiLineArrayRowCount[id]; !ok {
@@ -148,31 +128,28 @@ func ParseTable(fileName string, rows [][]string) (*Table, error) {
 			}
 			multiLineArrayIdxMap[i] = multiLineArrayRowCount[id] - 1
 		} else {
-			idValue, err := parseGoValue(types[0], id)
+			idValue, err := parseGoValue(idField.Type, id)
 			if err != nil {
-				return nil, fmt.Errorf("failed to parse id value: %s, %s, %d, %s, %w", table.Name, names[0], i, id, err)
+				return nil, fmt.Errorf("failed to parse id value: %s, %s, %d, %s, %w", table.Name, td.FieldNames[0], i, id, err)
 			}
 			value = map[string]any{
-				names[0]: idValue,
+				idField.Name: idValue,
 			}
 			table.Values = append(table.Values, value)
 			rowMap[id] = value
 		}
 	}
 
-	for col := 1; col < colLen; col++ {
-		if strings.HasPrefix(names[col], "#") {
-			continue
-		}
-
-		nameTokens := strings.Split(names[col], ".")
+	for col := TableFieldIndexCol + 1; col < td.Columns; col++ {
+		nameTokens := strings.Split(td.FieldNames[col], ".")
 		tokenLen := len(nameTokens)
+		valueType := td.FieldTypes[col]
 
-		isCellArray := strings.HasPrefix(types[col], "[]")
+		isCellArray := strings.HasPrefix(valueType, "[]")
 		if isCellArray {
-			types[col] = types[col][len("[]"):]
-			if types[col] == "json" {
-				return nil, fmt.Errorf("json type is not allowed for cell array: %s, %s", table.Name, names[col])
+			valueType = valueType[len("[]"):]
+			if valueType == "json" {
+				return nil, fmt.Errorf("json type is not allowed for cell array: %s, %s", table.Name, td.FieldNames[col])
 			}
 		}
 
@@ -198,7 +175,7 @@ func ParseTable(fileName string, rows [][]string) (*Table, error) {
 			}
 
 			if i == tokenLen-1 {
-				field.Type = types[col]
+				field.Type = valueType
 				field.IsCellArray = isCellArray
 			} else {
 				field.Type = "struct"
@@ -313,8 +290,8 @@ func ParseTable(fileName string, rows [][]string) (*Table, error) {
 		return nil
 	}
 
-	for rowIdx, row := range rows {
-		container := rowMap[row[0]]
+	for rowIdx, row := range td.DataRows {
+		container := rowMap[row[TableFieldIndexCol]]
 		for _, field := range table.Fields {
 			if err := visitField(container, field, rowIdx, row); err != nil {
 				return nil, err

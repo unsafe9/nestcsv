@@ -1,7 +1,7 @@
 package nestcsv
 
 import (
-	"fmt"
+	"errors"
 	"github.com/xuri/excelize/v2"
 	"golang.org/x/sync/errgroup"
 	"path/filepath"
@@ -15,7 +15,7 @@ type ExcelOption struct {
 	DebugSaveDir *string  `yaml:"debug_save_dir,omitempty"`
 }
 
-func CollectExcelFiles(out chan<- TableData, option *ExcelOption) error {
+func CollectExcelFiles(out chan<- *TableData, option *ExcelOption) error {
 	if len(option.Extensions) == 0 {
 		option.Extensions = []string{"xlsx", "xlsm", "xlsb", "xls"}
 	}
@@ -33,10 +33,6 @@ func CollectExcelFiles(out chan<- TableData, option *ExcelOption) error {
 
 	var wg errgroup.Group
 	for path := range ch {
-		if strings.HasPrefix(filepath.Base(path), "#") {
-			continue
-		}
-
 		wg.Go(func() error {
 			file, err := excelize.OpenFile(path)
 			if err != nil {
@@ -53,25 +49,20 @@ func CollectExcelFiles(out chan<- TableData, option *ExcelOption) error {
 				if err != nil {
 					return err
 				}
-				if len(rows) == 0 {
-					return fmt.Errorf("no rows in the sheet: %s", sheet)
-				}
 
-				// Ensure that all rows have the same length as the header row
-				headerLen := len(rows[0])
-				for i, row := range rows {
-					if len(row) < headerLen {
-						rows[i] = append(row, make([]string, headerLen-len(row))...)
+				tableData, err := ParseTableData(sheet, rows)
+				if err != nil {
+					if errors.Is(err, ErrSkipTable) {
+						return nil
 					}
+					return err
 				}
-
-				csv := NewTableData(sheet, rows)
 				if option.DebugSaveDir != nil {
-					if err := csv.Save(*option.DebugSaveDir); err != nil {
+					if err := tableData.SaveAsCSV(*option.DebugSaveDir); err != nil {
 						return err
 					}
 				}
-				out <- csv
+				out <- tableData
 			}
 			return nil
 		})

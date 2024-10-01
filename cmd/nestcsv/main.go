@@ -33,7 +33,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	out := make(chan nestcsv.TableData, 1000)
+	out := make(chan *nestcsv.TableData, 1000)
 
 	go func() {
 		defer close(out)
@@ -60,9 +60,9 @@ func main() {
 	}()
 
 	var wg errgroup.Group
-	for csv := range out {
+	for tableData := range out {
 		wg.Go(func() error {
-			table, err := nestcsv.ParseTable(csv.Name, csv.Rows)
+			table, err := nestcsv.ParseTable(tableData)
 			if err != nil {
 				return err
 			}
