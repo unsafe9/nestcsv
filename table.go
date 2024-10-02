@@ -8,16 +8,6 @@ import (
 	"time"
 )
 
-type TableField struct {
-	Name             string
-	Type             string
-	IsMultiLineArray bool
-	IsCellArray      bool
-	StructFields     []*TableField
-	ParentField      *TableField
-	column           int
-}
-
 type Table struct {
 	Name     string
 	Metadata *TableMetadata
@@ -40,7 +30,7 @@ func ParseTable(td *TableData) (*Table, error) {
 
 	idField := &TableField{
 		Name: td.FieldNames[TableFieldIndexCol],
-		Type: td.FieldTypes[TableFieldIndexCol],
+		Type: FieldType(td.FieldTypes[TableFieldIndexCol]),
 	}
 	table.Fields = append(table.Fields, idField)
 
@@ -68,21 +58,12 @@ func ParseTable(td *TableData) (*Table, error) {
 	}
 
 	for col := TableFieldIndexCol + 1; col < td.Columns; col++ {
-		nameTokens := strings.Split(td.FieldNames[col], ".")
-		tokenLen := len(nameTokens)
-		valueType := td.FieldTypes[col]
-
-		isCellArray := strings.HasPrefix(valueType, "[]")
-		if isCellArray {
-			valueType = valueType[len("[]"):]
-			if valueType == "json" {
-				return nil, fmt.Errorf("json type is not allowed for cell array: %s, %s", table.Name, td.FieldNames[col])
-			}
-		}
-
 		var (
-			multiLineArrayField *TableField
-			parentField         *TableField
+			nameTokens             = strings.Split(td.FieldNames[col], ".")
+			tokenLen               = len(nameTokens)
+			fieldType, isCellArray = newFieldType(td.FieldTypes[col])
+			multiLineArrayField    *TableField
+			parentField            *TableField
 		)
 
 		for i := 0; i < tokenLen; i++ {
@@ -102,10 +83,10 @@ func ParseTable(td *TableData) (*Table, error) {
 			}
 
 			if i == tokenLen-1 {
-				field.Type = valueType
+				field.Type = fieldType
 				field.IsCellArray = isCellArray
 			} else {
-				field.Type = "struct"
+				field.Type = FieldTypeStruct
 			}
 
 			if parentField != nil {
@@ -229,36 +210,36 @@ func ParseTable(td *TableData) (*Table, error) {
 	return &table, nil
 }
 
-func parseGoValue(typ, cell string) (any, error) {
+func parseGoValue(typ FieldType, cell string) (any, error) {
 	switch typ {
-	case "int":
+	case FieldTypeInt:
 		if cell == "" {
 			return 0, nil
 		}
 		return strconv.Atoi(cell)
-	case "long":
+	case FieldTypeLong:
 		if cell == "" {
 			return int64(0), nil
 		}
 		return strconv.ParseInt(cell, 10, 64)
-	case "float":
+	case FieldTypeFloat:
 		if cell == "" {
 			return float64(0), nil
 		}
 		return strconv.ParseFloat(cell, 64)
-	case "time":
-		if cell == "" {
-			return time.Time{}, nil
-		}
-		return time.Parse(time.DateTime, cell)
-	case "string":
-		return cell, nil
-	case "bool":
+	case FieldTypeBool:
 		if cell == "" {
 			return false, nil
 		}
 		return strconv.ParseBool(cell)
-	case "json":
+	case FieldTypeString:
+		return cell, nil
+	case FieldTypeTime:
+		if cell == "" {
+			return time.Time{}, nil
+		}
+		return time.Parse(time.DateTime, cell)
+	case FieldTypeJson:
 		if cell == "" {
 			return nil, nil
 		}

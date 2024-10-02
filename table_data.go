@@ -82,7 +82,7 @@ func ParseTableData(name string, csvData [][]string) (*TableData, error) {
 		return nil, fmt.Errorf("invalid index field: %s, %s", tableName, idxName)
 	}
 	idxType := fieldTypes[TableFieldIndexCol]
-	if idxType != "int" && idxType != "long" && idxType != "string" {
+	if isValidIndexType(idxType) {
 		return nil, fmt.Errorf("invalid index field type: %s, %s, %s", tableName, idxName, idxType)
 	}
 
