@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-type GASOption struct {
+type DatasourceSpreadsheetGAS struct {
 	URL                  string   `yaml:"url"`
 	Password             string   `yaml:"password"`
 	GoogleDriveFolderIDs []string `yaml:"google_drive_folder_ids"`
@@ -24,8 +24,8 @@ type GASOption struct {
 	// TODO : add google oauth2 authentication
 }
 
-func CollectSpreadsheetsThroughGAS(out chan<- *TableData, option *GASOption) error {
-	zipData, err := callGASAndReadBase64(option)
+func (d *DatasourceSpreadsheetGAS) Collect(out chan<- *TableData) error {
+	zipData, err := d.callGASAndReadBase64()
 	if err != nil {
 		return err
 	}
@@ -67,8 +67,8 @@ func CollectSpreadsheetsThroughGAS(out chan<- *TableData, option *GASOption) err
 				}
 				return err
 			}
-			if option.DebugSaveDir != nil {
-				if err := saveCSVFile(*option.DebugSaveDir, tableData.Name, tableData.CSV()); err != nil {
+			if d.DebugSaveDir != nil {
+				if err := saveCSVFile(*d.DebugSaveDir, tableData.Name, tableData.CSV()); err != nil {
 					return err
 				}
 			}
@@ -79,15 +79,15 @@ func CollectSpreadsheetsThroughGAS(out chan<- *TableData, option *GASOption) err
 	return wg.Wait()
 }
 
-func callGASAndReadBase64(option *GASOption) ([]byte, error) {
-	uri, err := url.Parse(option.URL)
+func (d *DatasourceSpreadsheetGAS) callGASAndReadBase64() ([]byte, error) {
+	uri, err := url.Parse(d.URL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse url: %w", err)
 	}
 	queryValues := url.Values{
-		"password":  {option.Password},
-		"folderIds": option.GoogleDriveFolderIDs,
-		"fileIds":   option.SpreadsheetFileIDs,
+		"password":  {d.Password},
+		"folderIds": d.GoogleDriveFolderIDs,
+		"fileIds":   d.SpreadsheetFileIDs,
 	}
 	uri.RawQuery = queryValues.Encode()
 

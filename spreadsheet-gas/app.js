@@ -29,12 +29,10 @@ function readSheetsAsCSV(res, fileId) {
 function readFolderSheets(res, folderId) {
   const parent = DriveApp.getFolderById(folderId);
 
-  const files = parent.getFiles();
+  const files = parent.getFilesByType(MimeType.GOOGLE_SHEETS);
   while (files.hasNext()) {
     const file = files.next();
-    if (file.getMimeType() === "application/vnd.google-apps.spreadsheet") {
-      readSheetsAsCSV(res, file.getId());
-    }
+    readSheetsAsCSV(res, file.getId());
   }
 
   const folders = parent.getFolders();
@@ -59,7 +57,6 @@ function doGet(e) {
   // Simply use a password to prevent unauthorized access.
   // You can use more secure methods such as OAuth2.
   const password = PropertiesService.getScriptProperties().getProperty("password");
-  e.hea
   if (e.parameter.password !== password) {
     throw new Error("Forbidden");
   }

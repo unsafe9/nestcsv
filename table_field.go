@@ -11,7 +11,7 @@ const (
 	FieldTypeBool   FieldType = "bool"
 	FieldTypeString FieldType = "string"
 	FieldTypeTime   FieldType = "time"
-	FieldTypeJson   FieldType = "json"
+	FieldTypeJSON   FieldType = "json"
 	FieldTypeStruct FieldType = "struct"
 )
 
@@ -27,14 +27,14 @@ func (t FieldType) String() string {
 }
 
 func (t FieldType) Array() FieldType {
-	if t == FieldTypeJson {
+	if t == FieldTypeJSON {
 		panic("unsupported type: json array")
 	}
 	return FieldType("[]" + t.String())
 }
 
-func isValidIndexType(t string) bool {
-	switch FieldType(t) {
+func (t FieldType) isValidIndexType() bool {
+	switch t {
 	case FieldTypeInt, FieldTypeLong, FieldTypeString:
 		return true
 	}
@@ -56,4 +56,27 @@ func (f *TableField) IsArray() bool {
 		return f.IsMultiLineArray
 	}
 	return f.IsMultiLineArray || f.IsCellArray
+}
+
+func (f *TableField) Identifier() string {
+	if f.ParentField != nil {
+		return f.ParentField.Identifier() + "." + f.Name
+	}
+	return f.Name
+}
+
+func (f *TableField) IsInMultiLineArray() bool {
+	for p := f; p != nil; p = p.ParentField {
+		if p.IsMultiLineArray {
+			return true
+		}
+	}
+	return false
+}
+
+func (f *TableField) printDebug(depth int) {
+	println(strings.Repeat("  ", depth), f.Name, f.Type)
+	for _, sf := range f.StructFields {
+		sf.printDebug(depth + 1)
+	}
 }

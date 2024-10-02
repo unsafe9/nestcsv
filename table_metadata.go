@@ -10,46 +10,36 @@ import (
 )
 
 type TableMetadata struct {
-	DropID       bool              `query:"drop_id"`
-	AsMap        bool              `query:"as_map"`
-	SortAscBy    string            `query:"sort_asc_by"`
-	SortDescBy   string            `query:"sort_desc_by"`
-	TypeMappings map[string]string `query:"type_mapping"`
+	DropID      bool              `query:"drop_id"`
+	AsMap       bool              `query:"as_map"`
+	SortAscBy   string            `query:"sort_asc_by"`
+	SortDescBy  string            `query:"sort_desc_by"`
+	StructTypes map[string]string `query:"struct_type"`
 }
 
-func ParseTableMetadata(a1 string, td *TableData) (*TableMetadata, error) {
-	values, err := url.ParseQuery(a1)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse a1 cell: %w", err)
+func (m *TableMetadata) Validate(td *TableData) error {
+	if m.AsMap && (m.SortAscBy != "" || m.SortDescBy != "") {
+		return fmt.Errorf("as_map and sort_by are mutually exclusive")
 	}
 
-	var metadata TableMetadata
-	if err := decodeQuery(values, &metadata); err != nil {
-		return nil, err
+	if m.SortAscBy != "" && m.SortDescBy != "" {
+		return fmt.Errorf("both sort_asc_by and sort_desc_by are set")
 	}
-
-	if metadata.AsMap && (metadata.SortAscBy != "" || metadata.SortDescBy != "") {
-		return nil, fmt.Errorf("as_map and sort_by are mutually exclusive")
-	}
-
-	if metadata.SortAscBy != "" && metadata.SortDescBy != "" {
-		return nil, fmt.Errorf("both sort_asc_by and sort_desc_by are set")
-	}
-	if metadata.SortAscBy != "" {
-		if err := validateSortByField(td, metadata.SortAscBy); err != nil {
-			return nil, err
+	if m.SortAscBy != "" {
+		if err := m.validateSortByField(td, m.SortAscBy); err != nil {
+			return err
 		}
 	}
-	if metadata.SortDescBy != "" {
-		if err := validateSortByField(td, metadata.SortDescBy); err != nil {
-			return nil, err
+	if m.SortDescBy != "" {
+		if err := m.validateSortByField(td, m.SortDescBy); err != nil {
+			return err
 		}
 	}
 
-	return &metadata, nil
+	return nil
 }
 
-func validateSortByField(td *TableData, field string) error {
+func (m *TableMetadata) validateSortByField(td *TableData, field string) error {
 	col := slices.Index(td.FieldNames, field)
 	if col == -1 {
 		return fmt.Errorf("sort_by: field not found: %s", field)
@@ -64,12 +54,17 @@ func validateSortByField(td *TableData, field string) error {
 	return nil
 }
 
-func decodeQuery(values url.Values, structPtr any) error {
-	v := reflect.ValueOf(structPtr).Elem()
-	t := v.Type()
-	if t.Kind() != reflect.Struct {
-		panic("not a struct")
+type TableMetadataQuery string
+
+func (q TableMetadataQuery) Decode() (*TableMetadata, error) {
+	values, err := url.ParseQuery(string(q))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse query: %w", err)
 	}
+
+	var metadata TableMetadata
+	v := reflect.ValueOf(&metadata).Elem()
+	t := v.Type()
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
@@ -78,15 +73,15 @@ func decodeQuery(values url.Values, structPtr any) error {
 			continue
 		}
 		if val, ok := values[tag]; ok {
-			if err := parseStringSliceInto(v.Field(i), val); err != nil {
-				return err
+			if err := q.parseStringSliceInto(v.Field(i), val); err != nil {
+				return nil, err
 			}
 		}
 	}
-	return nil
+	return &metadata, nil
 }
 
-func parseStringSliceInto(field reflect.Value, val []string) error {
+func (q TableMetadataQuery) parseStringSliceInto(field reflect.Value, val []string) error {
 	if len(val) == 0 {
 		panic("empty value")
 	}
@@ -102,7 +97,7 @@ func parseStringSliceInto(field reflect.Value, val []string) error {
 	case reflect.Slice:
 		slice := reflect.MakeSlice(field.Type(), len(val), len(val))
 		for i, v := range val {
-			if err := parseStringInto(slice.Index(i), v); err != nil {
+			if err := q.parseStringInto(slice.Index(i), v); err != nil {
 				return err
 			}
 		}
@@ -116,11 +111,11 @@ func parseStringSliceInto(field reflect.Value, val []string) error {
 				return fmt.Errorf("invalid map value: %s", v)
 			}
 			key := reflect.New(field.Type().Key()).Elem()
-			if err := parseStringInto(key, parts[0]); err != nil {
+			if err := q.parseStringInto(key, parts[0]); err != nil {
 				return err
 			}
 			value := reflect.New(field.Type().Elem()).Elem()
-			if err := parseStringInto(value, parts[1]); err != nil {
+			if err := q.parseStringInto(value, parts[1]); err != nil {
 				return err
 			}
 			m.SetMapIndex(key, value)
@@ -128,13 +123,13 @@ func parseStringSliceInto(field reflect.Value, val []string) error {
 		field.Set(m)
 
 	default:
-		return parseStringInto(field, val[0])
+		return q.parseStringInto(field, val[0])
 	}
 
 	return nil
 }
 
-func parseStringInto(field reflect.Value, val string) error {
+func (q TableMetadataQuery) parseStringInto(field reflect.Value, val string) error {
 	switch field.Kind() {
 	case reflect.String:
 		field.SetString(val)

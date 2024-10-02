@@ -1,7 +1,6 @@
 package nestcsv
 
 import (
-	"encoding/binary"
 	"encoding/csv"
 	"fmt"
 	"io/fs"
@@ -10,6 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"slices"
+	"sort"
 	"strings"
 )
 
@@ -32,7 +32,7 @@ func findPtr[T any](arr []*T, f func(*T) bool) *T {
 	return nil
 }
 
-func isAllEmpty(arr []string) bool {
+func isAllStringEmpty(arr []string) bool {
 	for _, v := range arr {
 		if v != "" {
 			return false
@@ -146,34 +146,116 @@ func saveCSVFile(rootDir, fileName string, csvData [][]string) error {
 	return nil
 }
 
-func saveJSONFile(rootDir, fileName string, jsonBytes []byte) error {
-	file, err := createFile(rootDir, fileName, "json")
-	if err != nil {
-		return fmt.Errorf("failed to create the file: %s, %w", fileName, err)
+func collectStructFieldsImplementing[T any](structPtr any) []T {
+	var (
+		ret = make([]T, 0)
+		it  = reflect.TypeOf((*T)(nil)).Elem()
+		v   = reflect.ValueOf(structPtr).Elem()
+	)
+	for i := 0; i < v.NumField(); i++ {
+		f := v.Field(i)
+		if f.IsNil() || !f.Type().Implements(it) {
+			continue
+		}
+		ret = append(ret, f.Interface().(T))
 	}
-	defer file.Close()
-
-	if _, err := file.Write(jsonBytes); err != nil {
-		return fmt.Errorf("failed to write the file: %s, %w", fileName, err)
-	}
-	return nil
+	return ret
 }
 
-func saveBinFile(rootDir, fileName string, jsonBytes []byte) error {
-	file, err := createFile(rootDir, fileName, "bin")
-	if err != nil {
-		return fmt.Errorf("failed to create the file: %s, %w", fileName, err)
-	}
-	defer file.Close()
-
-	binHeader := make([]byte, 4)
-	binary.BigEndian.PutUint32(binHeader, uint32(len(jsonBytes)))
-	if _, err := file.Write(binHeader); err != nil {
-		return fmt.Errorf("failed to write the binary header: %s, %w", fileName, err)
+func reflectObjListField(objList any, key string) (v reflect.Value, isMap bool, isMethod bool) {
+	if objList == nil {
+		return reflect.Value{}, false, false
 	}
 
-	if _, err := file.Write(jsonBytes); err != nil {
-		return fmt.Errorf("failed to write the file: %s, %w", fileName, err)
+	v = reflect.ValueOf(objList)
+	if v.Kind() != reflect.Slice {
+		panic("objList is not slice")
 	}
-	return nil
+	if v.Len() == 0 {
+		return v, false, false
+	}
+	elem := v.Index(0)
+	if elem.Kind() == reflect.Interface {
+		elem = elem.Elem()
+	}
+	if elem.Kind() == reflect.Map {
+		isMap = true
+	} else if m := elem.MethodByName(key); m.IsValid() {
+		isMethod = true
+	} else {
+		if elem.Kind() == reflect.Ptr {
+			elem = elem.Elem()
+		}
+		field := elem.FieldByName(key)
+		if !field.IsValid() {
+			panic("invalid key " + key)
+		}
+	}
+	return v, isMap, isMethod
+}
+
+func reflectObjListFieldElemValue(v reflect.Value, idx int, isMap, isMethod bool, key string) reflect.Value {
+	elem := v.Index(idx)
+	if elem.Kind() == reflect.Ptr {
+		elem = elem.Elem()
+	}
+
+	if isMap {
+		return elem.MapIndex(reflect.ValueOf(key))
+	} else if isMethod {
+		return elem.MethodByName(key).Call(nil)[0]
+	} else {
+		return elem.FieldByName(key)
+	}
+}
+
+func sortBy(objList any, key string) any {
+	v, isMap, isMethod := reflectObjListField(objList, key)
+	if !v.IsValid() || v.Len() == 0 {
+		return nil
+	}
+	sort.Slice(objList, func(i, j int) bool {
+		valI := reflectObjListFieldElemValue(v, i, isMap, isMethod, key)
+		valJ := reflectObjListFieldElemValue(v, j, isMap, isMethod, key)
+
+		switch valI.Kind() {
+		case reflect.String:
+			return valI.String() < valJ.String()
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return valI.Int() < valJ.Int()
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return valI.Uint() < valJ.Uint()
+		case reflect.Float32, reflect.Float64:
+			return valI.Float() < valJ.Float()
+		default:
+			return strings.Compare(valI.String(), valJ.String()) < 0
+		}
+	})
+	return objList
+}
+
+func anyBy(objList any, key string, value any) bool {
+	v, isMap, isMethod := reflectObjListField(objList, key)
+	if !v.IsValid() || v.Len() == 0 {
+		return false
+	}
+	for i := 0; i < v.Len(); i++ {
+		val := reflectObjListFieldElemValue(v, i, isMap, isMethod, key)
+		if val.IsValid() && val.Interface() == value {
+			return true
+		}
+	}
+	return false
+}
+
+func pascal(s string) string {
+	tokens := strings.Split(strings.ReplaceAll(s, "_", " "), " ")
+	for i, token := range tokens {
+		if len(token) > 1 {
+			tokens[i] = strings.ToUpper(token[:1]) + token[1:]
+		} else if len(token) == 1 {
+			tokens[i] = strings.ToUpper(token)
+		}
+	}
+	return strings.Join(tokens, "")
 }

@@ -81,8 +81,8 @@ func ParseTableData(name string, csvData [][]string) (*TableData, error) {
 	if strings.Contains(idxName, ".") {
 		return nil, fmt.Errorf("invalid index field: %s, %s", tableName, idxName)
 	}
-	idxType := fieldTypes[TableFieldIndexCol]
-	if isValidIndexType(idxType) {
+	idxType := FieldType(fieldTypes[TableFieldIndexCol])
+	if !idxType.isValidIndexType() {
 		return nil, fmt.Errorf("invalid index field type: %s, %s, %s", tableName, idxName, idxType)
 	}
 
@@ -94,15 +94,18 @@ func ParseTableData(name string, csvData [][]string) (*TableData, error) {
 		DataRows:   dataRows,
 	}
 
-	metadata, err := ParseTableMetadata(csvData[TableMetadataRow][0], table)
+	metadataQuery := TableMetadataQuery(csvData[TableMetadataRow][0])
+	metadata, err := metadataQuery.Decode()
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse table metadata: %s, %w", name, err)
+		return nil, fmt.Errorf("failed to decode table metadata query: %s, %w", name, err)
 	}
-
+	if err := metadata.Validate(table); err != nil {
+		return nil, fmt.Errorf("invalid table metadata: %s, %w", name, err)
+	}
 	table.Metadata = metadata
 	return table, nil
 }
 
-func (c *TableData) CSV() [][]string {
-	return append([][]string{c.FieldNames, c.FieldTypes}, c.DataRows...)
+func (d *TableData) CSV() [][]string {
+	return append([][]string{d.FieldNames, d.FieldTypes}, d.DataRows...)
 }

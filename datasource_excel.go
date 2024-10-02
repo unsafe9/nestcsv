@@ -8,21 +8,21 @@ import (
 	"strings"
 )
 
-type ExcelOption struct {
+type DatasourceExcel struct {
 	Directories  []string `yaml:"directories"`
 	Files        []string `yaml:"files"`
 	Extensions   []string `yaml:"extensions"`
 	DebugSaveDir *string  `yaml:"debug_save_dir,omitempty"`
 }
 
-func CollectExcelFiles(out chan<- *TableData, option *ExcelOption) error {
-	if len(option.Extensions) == 0 {
-		option.Extensions = []string{"xlsx", "xlsm", "xlsb", "xls"}
+func (d *DatasourceExcel) Collect(out chan<- *TableData) error {
+	if len(d.Extensions) == 0 {
+		d.Extensions = []string{"xlsx", "xlsm", "xlsb", "xls"}
 	}
 
 	ch := make(chan string, 1000)
 	go func() {
-		for path := range walkFiles(option.Directories, option.Files, option.Extensions) {
+		for path := range walkFiles(d.Directories, d.Files, d.Extensions) {
 			if strings.HasPrefix(filepath.Base(path), "#") {
 				continue
 			}
@@ -57,8 +57,8 @@ func CollectExcelFiles(out chan<- *TableData, option *ExcelOption) error {
 					}
 					return err
 				}
-				if option.DebugSaveDir != nil {
-					if err := saveCSVFile(*option.DebugSaveDir, tableData.Name, tableData.CSV()); err != nil {
+				if d.DebugSaveDir != nil {
+					if err := saveCSVFile(*d.DebugSaveDir, tableData.Name, tableData.CSV()); err != nil {
 						return err
 					}
 				}

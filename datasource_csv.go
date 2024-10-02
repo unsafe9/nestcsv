@@ -9,15 +9,15 @@ import (
 	"strings"
 )
 
-type CSVOption struct {
+type DatasourceCSV struct {
 	Directories []string `yaml:"directories"`
 	Files       []string `yaml:"files"`
 }
 
-func CollectCSVFiles(out chan<- *TableData, option *CSVOption) error {
+func (d *DatasourceCSV) Collect(out chan<- *TableData) error {
 	ch := make(chan string, 1000)
 	go func() {
-		for path := range walkFiles(option.Directories, option.Files, []string{"csv"}) {
+		for path := range walkFiles(d.Directories, d.Files, []string{"csv"}) {
 			if strings.HasPrefix(filepath.Base(path), "#") {
 				continue
 			}
