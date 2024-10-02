@@ -7,3 +7,9 @@ output:
   indent: "  "
   root_dir: ./json
   file_type: json
+
+codegen:
+  go:
+    root_dir: ./go
+    package_name: table
+    data_load_path: ../json

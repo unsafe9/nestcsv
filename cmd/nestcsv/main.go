@@ -5,6 +5,7 @@ import (
 	"github.com/unsafe9/nestcsv"
 	"golang.org/x/sync/errgroup"
 	"log"
+	"sync"
 )
 
 func main() {
@@ -33,6 +34,11 @@ func main() {
 		}
 	}()
 
+	var (
+		tables []*nestcsv.Table
+		mu     sync.Mutex
+	)
+
 	var wg errgroup.Group
 	for tableData := range out {
 		wg.Go(func() error {
@@ -40,10 +46,26 @@ func main() {
 			if err != nil {
 				return err
 			}
-			return config.Output.Encode(table)
+			if err := config.Output.Encode(table); err != nil {
+				return err
+			}
+
+			mu.Lock()
+			tables = append(tables, table)
+			mu.Unlock()
+			return nil
 		})
 	}
 	if err := wg.Wait(); err != nil {
 		log.Fatalf("failed to save table: %v", err)
+	}
+
+	for _, codegen := range config.Codegen.List() {
+		wg.Go(func() error {
+			return codegen.Generate(tables)
+		})
+	}
+	if err := wg.Wait(); err != nil {
+		log.Fatalf("failed to generate code: %v", err)
 	}
 }

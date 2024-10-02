@@ -37,6 +37,12 @@ output:
   indent: "  "
   root_dir: ./output
   file_type: json
+
+codegen:
+  go:
+    root_dir: ./go
+    package_name: table
+    data_load_path: ../json
 ```
 
 Run the following command:
@@ -61,5 +67,4 @@ See [examples](./examples)
 - [ ] Extract time format settings into the configuration file
 - [ ] Allow overriding configurations for each CSV files
 ### Code generation
-- [ ] Implement code generation for the schema
-- [ ] Replace repeated structs into separate, reusable structs
+- [ ] Protobuf schema generation

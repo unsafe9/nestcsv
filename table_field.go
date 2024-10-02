@@ -1,6 +1,9 @@
 package nestcsv
 
-import "strings"
+import (
+	"iter"
+	"strings"
+)
 
 type FieldType string
 
@@ -78,5 +81,34 @@ func (f *TableField) printDebug(depth int) {
 	println(strings.Repeat("  ", depth), f.Name, f.Type)
 	for _, sf := range f.StructFields {
 		sf.printDebug(depth + 1)
+	}
+}
+
+func (f *TableField) Equal(other *TableField) bool {
+	if f.Name != other.Name || f.Type != other.Type || f.IsMultiLineArray != other.IsMultiLineArray || f.IsCellArray != other.IsCellArray {
+		return false
+	}
+	if len(f.StructFields) != len(other.StructFields) {
+		return false
+	}
+	for i, sf := range f.StructFields {
+		if !sf.Equal(other.StructFields[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func (f *TableField) Iterate() iter.Seq[*TableField] {
+	return func(yield func(*TableField) bool) {
+		var iterate func(f *TableField)
+		iterate = func(f *TableField) {
+			if yield(f) {
+				for _, structField := range f.StructFields {
+					iterate(structField)
+				}
+			}
+		}
+		iterate(f)
 	}
 }

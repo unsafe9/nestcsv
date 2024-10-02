@@ -3,7 +3,6 @@ package nestcsv
 import (
 	"encoding/json"
 	"fmt"
-	"iter"
 	"strconv"
 	"strings"
 	"time"
@@ -121,7 +120,7 @@ func (p *tableParser) parse() (*Table, error) {
 	for rowIdx, row := range td.DataRows {
 		for _, topField := range table.Fields {
 			container := rowMap[row[TableFieldIndexCol]]
-			for field := range p.visitFields(topField) {
+			for field := range topField.Iterate() {
 				multiLineArrayIdx := multiLineArrayIdxMap[rowIdx]
 
 				// skip if it's non array fields
@@ -243,23 +242,9 @@ func (p *tableParser) parseGoValue(typ FieldType, cell string) (any, error) {
 	}
 }
 
-func (p *tableParser) visitFields(field *TableField) iter.Seq[*TableField] {
-	return func(yield func(*TableField) bool) {
-		var visitField func(f *TableField)
-		visitField = func(f *TableField) {
-			if yield(f) {
-				for _, structField := range f.StructFields {
-					visitField(structField)
-				}
-			}
-		}
-		visitField(field)
-	}
-}
-
 func (p *tableParser) checkAllCellsEmpty(field *TableField, row []string) bool {
 	var cells []string
-	for f := range p.visitFields(field) {
+	for f := range field.Iterate() {
 		cells = append(cells, row[f.column])
 	}
 	return isAllStringEmpty(cells)
