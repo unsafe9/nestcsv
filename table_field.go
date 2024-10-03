@@ -101,13 +101,17 @@ func (f *TableField) Equal(other *TableField) bool {
 
 func (f *TableField) Iterate() iter.Seq[*TableField] {
 	return func(yield func(*TableField) bool) {
-		var iterate func(f *TableField)
-		iterate = func(f *TableField) {
+		var iterate func(f *TableField) bool
+		iterate = func(f *TableField) bool {
 			if yield(f) {
 				for _, structField := range f.StructFields {
-					iterate(structField)
+					if !iterate(structField) {
+						return false
+					}
 				}
+				return true
 			}
+			return false
 		}
 		iterate(f)
 	}
