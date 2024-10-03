@@ -21,6 +21,10 @@ type codegenGoStruct struct {
 }
 
 func (c *CodegenGo) Generate(tables []*Table) error {
+	if c.PackageName == "" {
+		c.PackageName = filepath.Base(c.RootDir)
+	}
+
 	namedStructs := make(map[string]*codegenGoStruct)
 	for _, table := range tables {
 		cg := &codegenGoStruct{

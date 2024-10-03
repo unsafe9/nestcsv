@@ -65,6 +65,5 @@ See [examples](./examples)
 - [ ] Integrate spreadsheet datasource using the Sheets API
 ### Config
 - [ ] Extract time format settings into the configuration file
-- [ ] Allow overriding configurations for each CSV files
 ### Code generation
 - [ ] Protobuf schema generation
