@@ -27,18 +27,18 @@ func (c *CodegenGo) Generate(tables []*Table) error {
 
 	namedStructs := make(map[string]*codegenGoStruct)
 	for _, table := range tables {
-		cg := &codegenGoStruct{
+		cs := &codegenGoStruct{
 			name:         table.Name,
 			fields:       table.Fields,
 			namedStructs: table.Metadata.StructTypes,
 		}
-		cg.collectNamedStructs(namedStructs)
+		cs.collectNamedStructs(namedStructs)
 		imports := make([]string, 0)
-		if cg.includeTime() {
+		if cs.includeTime() {
 			imports = append(imports, "time")
 		}
 		funcs := template.FuncMap{
-			"renderStruct": cg.renderStruct,
+			"renderStruct": cs.renderStruct,
 		}
 		values := map[string]any{
 			"PackageName":  c.PackageName,
@@ -52,14 +52,14 @@ func (c *CodegenGo) Generate(tables []*Table) error {
 		}
 	}
 
-	for name, cg := range namedStructs {
+	for name, cs := range namedStructs {
 		funcs := template.FuncMap{
-			"renderStruct": cg.renderStruct,
+			"renderStruct": cs.renderStruct,
 		}
 		values := map[string]any{
 			"PackageName": c.PackageName,
 			"Name":        name,
-			"Fields":      cg.fields,
+			"Fields":      cs.fields,
 		}
 		err := c.template(name+".go", "struct.go.tpl", funcs, values)
 		if err != nil {
@@ -94,6 +94,8 @@ func (c *CodegenGo) template(fileName, templateName string, funcs template.FuncM
 	if err != nil {
 		return err
 	}
+	defer file.Close()
+
 	_, err = file.Write(fileBytes)
 	if err != nil {
 		return err
