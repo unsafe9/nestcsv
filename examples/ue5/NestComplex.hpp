@@ -17,8 +17,8 @@ public:
 
     void Load(const TSharedPtr<FJsonObject>& JsonObject)
     {
-        JsonObject.TryGetStringField(TEXT("Type"), Type);
-        JsonObject.TryGetStringField(TEXT("ID"), ID);
+        JsonObject.ToSharedRef()->TryGetStringField(TEXT("Type"), Type);
+        JsonObject.ToSharedRef()->TryGetStringField(TEXT("ID"), ID);
     }
 };
 
@@ -39,7 +39,7 @@ public:
 
     void Load(const TSharedPtr<FJsonObject>& JsonObject)
     {
-        JsonObject.TryGetNumberField(TEXT("ID"), ID);
+        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("ID"), ID);
         const TArray<TSharedPtr<FJsonValue>>* TagsArray = nullptr;
         if (JsonObject.TryGetArrayField(TEXT("Tags"), TagsArray))
         {
@@ -53,12 +53,12 @@ public:
         {
             for (const auto& Item : *SKUArray)
             {
-                TSharedPtr<FJsonObject> SKUObject = Item->AsObject();
-                if (SKUObject.IsValid())
+                TSharedPtr<FJsonObject> Obj = Item->AsObject();
+                if (Obj.IsValid())
                 {
-                    TArray<NestComplexSKU> SKUItem;
-                    SKUItem.Load(SKUObject);
-                    SKU.Add(SKUItem);
+                    TArray<NestComplexSKU> ObjItem;
+                    ObjItem.Load(Obj);
+                    SKU.Add(ObjItem);
                 }
             }
         }
@@ -67,12 +67,12 @@ public:
         {
             for (const auto& Item : *RewardsArray)
             {
-                TSharedPtr<FJsonObject> RewardsObject = Item->AsObject();
-                if (RewardsObject.IsValid())
+                TSharedPtr<FJsonObject> Obj = Item->AsObject();
+                if (Obj.IsValid())
                 {
-                    TArray<NestReward> RewardsItem;
-                    RewardsItem.Load(RewardsObject);
-                    Rewards.Add(RewardsItem);
+                    TArray<NestReward> ObjItem;
+                    ObjItem.Load(Obj);
+                    Rewards.Add(ObjItem);
                 }
             }
         }

@@ -34,16 +34,16 @@ public:
 
     void Load(const TSharedPtr<FJsonObject>& JsonObject)
     {
-        JsonObject.TryGetNumberField(TEXT("Int"), Int);
-        JsonObject.TryGetNumberField(TEXT("Long"), Long);
-        JsonObject.TryGetNumberField(TEXT("Float"), Float);
-        JsonObject.TryGetStringField(TEXT("String"), String);
+        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Int"), Int);
+        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Long"), Long);
+        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Float"), Float);
+        JsonObject.ToSharedRef()->TryGetStringField(TEXT("String"), String);
         FString TimeDtStr;
-        if (JsonObject.TryGetStringField(TEXT("Time"), TimeDtStr))
+        if (JsonObject.ToSharedRef()->TryGetStringField(TEXT("Time"), TimeDtStr))
         {
-            Time = FDateTime::FromIso8601(TimeDtStr);
+            FDateTime::ParseIso8601(TimeDtStr, Time);
         }
-        JsonObject.TryGetField(TEXT("Json"), Json);
+        JsonObject.ToSharedRef()->TryGetField(TEXT("Json"), Json);
         const TArray<TSharedPtr<FJsonValue>>* IntArrayArray = nullptr;
         if (JsonObject.TryGetArrayField(TEXT("IntArray"), IntArrayArray))
         {
@@ -81,8 +81,11 @@ public:
         {
             for (const auto& Item : *TimeArrayArray)
             {
-                FString TimeArrayDtStr = Item->AsString();
-                TimeArray.Add(FDateTime::FromIso8601(TimeArrayDtStr));
+                FDateTime Dt;
+                if (FDateTime::ParseIso8601(Item->AsString(), Dt))
+                {
+                    TimeArray.Add(Dt);
+                }
             }
         }
     }

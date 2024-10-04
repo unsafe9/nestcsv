@@ -38,42 +38,45 @@ public:
                 {{- else if eq .Type "string" }}
                 {{ .Name }}.Add(Item->AsString());
                 {{- else if eq .Type "time" }}
-                FString {{ .Name }}DtStr = Item->AsString();
-                {{ .Name }}.Add(FDateTime::FromIso8601({{ .Name }}DtStr));
+                FDateTime Dt;
+                if (FDateTime::ParseIso8601(Item->AsString(), Dt))
+                {
+                    {{ .Name }}.Add(Dt);
+                }
                 {{- else if eq .Type "json" }}
                 {{ .Name }}.Add(Item);
                 {{- else if eq .Type "struct" }}
-                TSharedPtr<FJsonObject> {{ .Name }}Object = Item->AsObject();
-                if ({{ .Name }}Object.IsValid())
+                TSharedPtr<FJsonObject> Obj = Item->AsObject();
+                if (Obj.IsValid())
                 {
-                    {{ fieldType . }} {{ .Name }}Item;
-                    {{ .Name }}Item.Load({{ .Name }}Object);
-                    {{ .Name }}.Add({{ .Name }}Item);
+                    {{ fieldType . }} ObjItem;
+                    ObjItem.Load(Obj);
+                    {{ .Name }}.Add(ObjItem);
                 }
                 {{- end }}
             }
         }
         {{- else if eq .Type "int" }}
-        JsonObject.TryGetNumberField(TEXT("{{ .Name }}"), {{ .Name }});
+        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("{{ .Name }}"), {{ .Name }});
         {{- else if eq .Type "long" }}
-        JsonObject.TryGetNumberField(TEXT("{{ .Name }}"), {{ .Name }});
+        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("{{ .Name }}"), {{ .Name }});
         {{- else if eq .Type "float" }}
-        JsonObject.TryGetNumberField(TEXT("{{ .Name }}"), {{ .Name }});
+        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("{{ .Name }}"), {{ .Name }});
         {{- else if eq .Type "bool" }}
-        JsonObject.TryGetBoolField(TEXT("{{ .Name }}"), {{ .Name }});
+        JsonObject.ToSharedRef()->TryGetBoolField(TEXT("{{ .Name }}"), {{ .Name }});
         {{- else if eq .Type "string" }}
-        JsonObject.TryGetStringField(TEXT("{{ .Name }}"), {{ .Name }});
+        JsonObject.ToSharedRef()->TryGetStringField(TEXT("{{ .Name }}"), {{ .Name }});
         {{- else if eq .Type "time" }}
         FString {{ .Name }}DtStr;
-        if (JsonObject.TryGetStringField(TEXT("{{ .Name }}"), {{ .Name }}DtStr))
+        if (JsonObject.ToSharedRef()->TryGetStringField(TEXT("{{ .Name }}"), {{ .Name }}DtStr))
         {
-            {{ .Name }} = FDateTime::FromIso8601({{ .Name }}DtStr);
+            FDateTime::ParseIso8601({{ .Name }}DtStr, {{ .Name }});
         }
         {{- else if eq .Type "json" }}
-        JsonObject.TryGetField(TEXT("{{ .Name }}"), {{ .Name }});
+        JsonObject.ToSharedRef()->TryGetField(TEXT("{{ .Name }}"), {{ .Name }});
         {{- else if eq .Type "struct" }}
         TSharedPtr<FJsonObject> {{ .Name }}Object;
-        if (JsonObject->TryGetObjectField(TEXT("{{ .Name }}"), {{ .Name }}Object))
+        if (JsonObject.ToSharedRef()->TryGetObjectField(TEXT("{{ .Name }}"), {{ .Name }}Object))
         {
             {{ .Name }}.Load({{ .Name }}Object);
         }

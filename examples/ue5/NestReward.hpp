@@ -18,9 +18,9 @@ public:
 
     void Load(const TSharedPtr<FJsonObject>& JsonObject)
     {
-        JsonObject.TryGetNumberField(TEXT("Int"), Int);
-        JsonObject.TryGetNumberField(TEXT("Float"), Float);
-        JsonObject.TryGetStringField(TEXT("Str"), Str);
+        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Int"), Int);
+        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Float"), Float);
+        JsonObject.ToSharedRef()->TryGetStringField(TEXT("Str"), Str);
     }
 };
 
@@ -39,10 +39,10 @@ public:
 
     void Load(const TSharedPtr<FJsonObject>& JsonObject)
     {
-        JsonObject.TryGetStringField(TEXT("Type"), Type);
-        JsonObject.TryGetStringField(TEXT("ParamType"), ParamType);
+        JsonObject.ToSharedRef()->TryGetStringField(TEXT("Type"), Type);
+        JsonObject.ToSharedRef()->TryGetStringField(TEXT("ParamType"), ParamType);
         TSharedPtr<FJsonObject> ParamValueObject;
-        if (JsonObject->TryGetObjectField(TEXT("ParamValue"), ParamValueObject))
+        if (JsonObject.ToSharedRef()->TryGetObjectField(TEXT("ParamValue"), ParamValueObject))
         {
             ParamValue.Load(ParamValueObject);
         }
