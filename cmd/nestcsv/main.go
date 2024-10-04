@@ -60,9 +60,14 @@ func main() {
 		log.Fatalf("failed to save table: %v", err)
 	}
 
+	code, err := nestcsv.AnalyzeTableCode(tables)
+	if err != nil {
+		log.Fatalf("failed to analyze tables: %v", err)
+	}
+
 	for _, codegen := range config.Codegen.List() {
 		wg.Go(func() error {
-			return codegen.Generate(tables)
+			return codegen.Generate(code)
 		})
 	}
 	if err := wg.Wait(); err != nil {

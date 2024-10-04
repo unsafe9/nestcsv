@@ -116,3 +116,19 @@ func (f *TableField) Iterate() iter.Seq[*TableField] {
 		iterate(f)
 	}
 }
+
+func (f *TableField) Clone() *TableField {
+	clone := &TableField{
+		Name:             f.Name,
+		Type:             f.Type,
+		IsMultiLineArray: f.IsMultiLineArray,
+		IsCellArray:      f.IsCellArray,
+		column:           f.column,
+	}
+	for _, sf := range f.StructFields {
+		sfClone := sf.Clone()
+		sfClone.ParentField = clone
+		clone.StructFields = append(clone.StructFields, sfClone)
+	}
+	return clone
+}

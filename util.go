@@ -1,8 +1,11 @@
 package nestcsv
 
 import (
+	"embed"
 	"encoding/csv"
 	"fmt"
+	"github.com/Masterminds/sprig/v3"
+	"github.com/gertd/go-pluralize"
 	"io/fs"
 	"iter"
 	"os"
@@ -11,6 +14,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"text/template"
 )
 
 func mapWithoutKey[K comparable, V any](m map[K]V, key K) map[K]V {
@@ -248,6 +252,21 @@ func anyBy(objList any, key string, value any) bool {
 	return false
 }
 
+func has(arr any, v any) bool {
+	arrValue := reflect.ValueOf(arr)
+	if arrValue.Kind() != reflect.Slice {
+		panic("arr is not slice")
+	}
+	value := reflect.ValueOf(v).Convert(arrValue.Type().Elem())
+
+	for i := 0; i < arrValue.Len(); i++ {
+		if arrValue.Index(i).Interface() == value.Interface() {
+			return true
+		}
+	}
+	return false
+}
+
 func pascal(s string) string {
 	tokens := strings.Split(strings.ReplaceAll(s, "_", " "), " ")
 	for i, token := range tokens {
@@ -258,4 +277,29 @@ func pascal(s string) string {
 		}
 	}
 	return strings.Join(tokens, "")
+}
+
+var pluralizeClient = pluralize.NewClient()
+
+func singular(s string) string {
+	return pluralizeClient.Singular(s)
+}
+
+func plural(s string) string {
+	return pluralizeClient.Plural(s)
+}
+
+//go:embed templates/*
+var templateFS embed.FS
+var templateFuncMap = initTemplateFuncs()
+
+func initTemplateFuncs() template.FuncMap {
+	m := sprig.FuncMap()
+	m["singular"] = singular
+	m["plural"] = plural
+	m["sortBy"] = sortBy
+	m["anyBy"] = anyBy
+	m["pascal"] = pascal
+	m["has"] = has
+	return m
 }

@@ -7,14 +7,16 @@ import (
 	"os"
 )
 
+type ComplexSKU struct {
+	Type string `json:"Type"`
+	ID   string `json:"ID"`
+}
+
 type Complex struct {
-	ID   int      `json:"ID"`
-	Tags []string `json:"Tags"`
-	SKU  []struct {
-		Type string `json:"Type"`
-		ID   string `json:"ID"`
-	} `json:"SKU"`
-	Rewards []Reward `json:"Rewards"`
+	ID      int          `json:"ID"`
+	Tags    []string     `json:"Tags"`
+	SKU     []ComplexSKU `json:"SKU"`
+	Rewards []Reward     `json:"Rewards"`
 }
 
 type ComplexTable struct {
