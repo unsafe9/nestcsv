@@ -3,14 +3,14 @@
 package {{ .PackageName }}
 
 type Tables struct{
-{{- range sortBy .Tables "Name" }}
+{{- range .Tables }}
     {{ pascal .Struct.Name }} {{ pascal .Struct.Name }}Table
 {{- end }}
 }
 
 func LoadTables() (*Tables, error) {
     var t Tables
-{{- range sortBy .Tables "Name" }}
+{{- range .Tables }}
     if err := t.{{ pascal .Struct.Name }}.Load(); err != nil {
         return nil, err
     }

@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"go/format"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"text/template"
 )
+
+var goEmptyImportRegexp = regexp.MustCompile(`import \(\s*\n\s*\)`)
 
 type CodegenGo struct {
 	RootDir      string `yaml:"root_dir"`
@@ -20,23 +23,15 @@ func (c *CodegenGo) Generate(code *Code) error {
 		c.PackageName = filepath.Base(c.RootDir)
 	}
 
-	for _, file := range code.NamedStructs {
+	for file := range code.Files() {
 		values := map[string]any{
 			"PackageName": c.PackageName,
 			"File":        file,
 		}
-		if err := c.template(file.Name+".go", "named_struct.go.tpl", values); err != nil {
-			return err
+		if file.Table != nil {
+			values["DataLoadPath"] = filepath.Join(c.DataLoadPath, file.Name+".json")
 		}
-	}
-
-	for _, file := range code.Tables {
-		values := map[string]any{
-			"PackageName":  c.PackageName,
-			"File":         file,
-			"DataLoadPath": filepath.Join(c.DataLoadPath, file.Name+".json"),
-		}
-		if err := c.template(file.Name+".go", "table.go.tpl", values); err != nil {
+		if err := c.template(file.Name+".go", "file.go.tpl", values); err != nil {
 			return err
 		}
 	}
@@ -57,7 +52,10 @@ func (c *CodegenGo) template(fileName, templateName string, values any) error {
 	tmpl, err := template.
 		New(filepath.Base(templateName)).
 		Funcs(templateFuncMap).
-		ParseFS(templateFS, "templates/go/"+templateName, "templates/go/include.tpl")
+		Funcs(template.FuncMap{
+			"fieldType": c.fieldType,
+		}).
+		ParseFS(templateFS, "templates/go/"+templateName)
 	if err != nil {
 		return fmt.Errorf("error parsing template: %s, %w", templateName, err)
 	}
@@ -67,7 +65,9 @@ func (c *CodegenGo) template(fileName, templateName string, values any) error {
 		return fmt.Errorf("error executing template: %s, %w", fileName, err)
 	}
 
-	fileBytes, err := format.Source(buf.Bytes())
+	fileBytes := goEmptyImportRegexp.ReplaceAll(buf.Bytes(), nil)
+
+	fileBytes, err = format.Source(fileBytes)
 	if err != nil {
 		return fmt.Errorf("error formatting source: %s, %w", fileName, err)
 	}
@@ -82,4 +82,32 @@ func (c *CodegenGo) template(fileName, templateName string, values any) error {
 		return err
 	}
 	return nil
+}
+
+func (c *CodegenGo) fieldType(f *CodeStructField) string {
+	ret := ""
+	switch f.Type {
+	case FieldTypeInt:
+		ret = "int"
+	case FieldTypeLong:
+		ret = "int64"
+	case FieldTypeFloat:
+		ret = "float64"
+	case FieldTypeBool:
+		ret = "bool"
+	case FieldTypeString:
+		ret = "string"
+	case FieldTypeTime:
+		ret = "time.Time"
+	case FileTypeJSON:
+		ret = "interface{}"
+	case FieldTypeStruct:
+		ret = pascal(f.StructRef.Name)
+	default:
+		panic("unknown type: " + f.Type)
+	}
+	if f.IsArray {
+		ret = "[]" + ret
+	}
+	return ret
 }

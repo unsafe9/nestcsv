@@ -14,7 +14,7 @@ type Types struct {
 	Float       float64     `json:"Float"`
 	String      string      `json:"String"`
 	Time        time.Time   `json:"Time"`
-	Json        any         `json:"Json"`
+	Json        interface{} `json:"Json"`
 	IntArray    []int       `json:"IntArray"`
 	LongArray   []int64     `json:"LongArray"`
 	FloatArray  []float64   `json:"FloatArray"`

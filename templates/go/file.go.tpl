@@ -4,18 +4,24 @@
 package {{ $.PackageName }}
 
 import (
+{{- if .Table }}
     "encoding/json"
     "os"
+{{- end }}
 {{- if has .FieldTypes "time" }}
     "time"
 {{- end }}
 )
 
-{{- range .AnonymousStructs }}
-{{ template "goStruct" . }}
+{{ range append .AnonymousStructs .Struct }}
+type {{ pascal .Name }} struct {
+{{- range .Fields }}
+    {{ pascal .Name }} {{ fieldType . }} `json:"{{ .Name }}"`
+{{- end }}
+}
 {{ end }}
-{{ template "goStruct" .Struct }}
 
+{{ if .Table }}
 type {{ pascal .Struct.Name }}Table struct{
     Rows []{{ pascal .Struct.Name }}
 }
@@ -33,4 +39,5 @@ func (t *{{ pascal .Struct.Name }}Table) Load() error {
 
     return json.NewDecoder(file).Decode(&t.Rows)
 }
+{{- end }}
 {{- end -}}

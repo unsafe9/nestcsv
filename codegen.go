@@ -1,7 +1,9 @@
 package nestcsv
 
 import (
+	"iter"
 	"slices"
+	"sort"
 	"strings"
 )
 
@@ -42,6 +44,21 @@ type CodeFile struct {
 type Code struct {
 	Tables       []*CodeFile
 	NamedStructs []*CodeFile
+}
+
+func (c *Code) Files() iter.Seq[*CodeFile] {
+	return func(yield func(*CodeFile) bool) {
+		for _, file := range c.NamedStructs {
+			if !yield(file) {
+				return
+			}
+		}
+		for _, file := range c.Tables {
+			if !yield(file) {
+				return
+			}
+		}
+	}
 }
 
 type codeAnalyzer struct {
@@ -142,6 +159,10 @@ func (a *codeAnalyzer) addTableFile(table *Table) *CodeFile {
 }
 
 func AnalyzeTableCode(tables []*Table) (*Code, error) {
+	sort.Slice(tables, func(i, j int) bool {
+		return strings.Compare(tables[i].Name, tables[j].Name) < 0
+	})
+
 	a := &codeAnalyzer{
 		namedStructFileFields: make(map[string]*TableField),
 		namedStructFiles:      make(map[string]*CodeFile),
