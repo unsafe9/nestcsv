@@ -1,6 +1,7 @@
 package nestcsv
 
 import (
+	"fmt"
 	"iter"
 	"slices"
 	"sort"
@@ -67,7 +68,7 @@ type codeAnalyzer struct {
 	tableFiles            map[string]*CodeFile
 }
 
-func (a *codeAnalyzer) buildStruct(file *CodeFile, table *Table, name string, fields []*TableField) *CodeStruct {
+func (a *codeAnalyzer) buildStruct(file *CodeFile, table *Table, name string, fields []*TableField) (*CodeStruct, error) {
 	codeStruct := &CodeStruct{
 		Name:   name,
 		Fields: make([]*CodeStructField, 0, len(fields)),
@@ -88,22 +89,29 @@ func (a *codeAnalyzer) buildStruct(file *CodeFile, table *Table, name string, fi
 		if field.Type == FieldTypeStruct {
 			id := field.Identifier()
 			if name, ok := table.Metadata.StructTypes[id]; ok {
-				refFile := a.getOrAddNamedStructFile(table, name, field)
+				refFile, err := a.getOrAddNamedStructFile(table, name, field)
+				if err != nil {
+					return nil, err
+				}
 				if !slices.Contains(file.FileRefs, refFile) {
 					file.FileRefs = append(file.FileRefs, refFile)
 				}
 				codeField.StructRef = refFile.Struct
 
 			} else {
-				codeField.StructRef = a.getOrAddAnonymousStruct(file, table, field)
+				structRef, err := a.getOrAddAnonymousStruct(file, table, field)
+				if err != nil {
+					return nil, err
+				}
+				codeField.StructRef = structRef
 			}
 		}
 	}
 
-	return codeStruct
+	return codeStruct, nil
 }
 
-func (a *codeAnalyzer) getOrAddAnonymousStruct(file *CodeFile, table *Table, field *TableField) *CodeStruct {
+func (a *codeAnalyzer) getOrAddAnonymousStruct(file *CodeFile, table *Table, field *TableField) (*CodeStruct, error) {
 	name := file.Name + "_" + strings.ReplaceAll(field.Identifier(), ".", "_")
 	if field.IsArray() {
 		name = singular(name)
@@ -113,22 +121,25 @@ func (a *codeAnalyzer) getOrAddAnonymousStruct(file *CodeFile, table *Table, fie
 		return s.Name == name
 	})
 	if existing != nil {
-		return existing
+		return existing, nil
 	}
 
-	codeStruct := a.buildStruct(file, table, name, field.StructFields)
+	codeStruct, err := a.buildStruct(file, table, name, field.StructFields)
+	if err != nil {
+		return nil, err
+	}
+
 	file.AnonymousStructs = append(file.AnonymousStructs, codeStruct)
-	return codeStruct
+	return codeStruct, nil
 }
 
-func (a *codeAnalyzer) getOrAddNamedStructFile(table *Table, name string, field *TableField) *CodeFile {
+func (a *codeAnalyzer) getOrAddNamedStructFile(table *Table, name string, field *TableField) (*CodeFile, error) {
 	field = field.Clone()
 	if fileField, ok := a.namedStructFileFields[name]; ok {
-		if !field.Equal(fileField) {
-			// TODO : better error handling
-			panic("named struct field mismatch: " + name)
+		if !field.StructFieldsEqual(fileField) {
+			return nil, fmt.Errorf("named struct %q has different fields", name)
 		}
-		return a.namedStructFiles[name]
+		return a.namedStructFiles[name], nil
 	}
 
 	file := &CodeFile{
@@ -137,14 +148,18 @@ func (a *codeAnalyzer) getOrAddNamedStructFile(table *Table, name string, field 
 	for _, f := range field.StructFields {
 		f.ParentField = nil
 	}
-	file.Struct = a.buildStruct(file, table, name, field.StructFields)
+	fileStruct, err := a.buildStruct(file, table, name, field.StructFields)
+	if err != nil {
+		return nil, err
+	}
+	file.Struct = fileStruct
 
 	a.namedStructFileFields[name] = field
 	a.namedStructFiles[name] = file
-	return file
+	return file, nil
 }
 
-func (a *codeAnalyzer) addTableFile(table *Table) *CodeFile {
+func (a *codeAnalyzer) addTableFile(table *Table) (*CodeFile, error) {
 	if _, ok := a.tableFiles[table.Name]; ok {
 		panic("table file already exists")
 	}
@@ -153,23 +168,26 @@ func (a *codeAnalyzer) addTableFile(table *Table) *CodeFile {
 		Table: table,
 		Name:  table.Name,
 	}
-	file.Struct = a.buildStruct(file, table, table.Name, table.Fields)
+	fileStruct, err := a.buildStruct(file, table, table.Name, table.Fields)
+	if err != nil {
+		return nil, err
+	}
+	file.Struct = fileStruct
+
 	a.tableFiles[table.Name] = file
-	return file
+	return file, nil
 }
 
 func AnalyzeTableCode(tables []*Table) (*Code, error) {
-	sort.Slice(tables, func(i, j int) bool {
-		return strings.Compare(tables[i].Name, tables[j].Name) < 0
-	})
-
 	a := &codeAnalyzer{
 		namedStructFileFields: make(map[string]*TableField),
 		namedStructFiles:      make(map[string]*CodeFile),
 		tableFiles:            make(map[string]*CodeFile),
 	}
 	for _, table := range tables {
-		a.addTableFile(table)
+		if _, err := a.addTableFile(table); err != nil {
+			return nil, err
+		}
 	}
 	code := &Code{
 		Tables:       make([]*CodeFile, 0, len(a.tableFiles)),
@@ -178,8 +196,14 @@ func AnalyzeTableCode(tables []*Table) (*Code, error) {
 	for _, file := range a.tableFiles {
 		code.Tables = append(code.Tables, file)
 	}
+	sort.Slice(code.Tables, func(i, j int) bool {
+		return code.Tables[i].Name < code.Tables[j].Name
+	})
 	for _, file := range a.namedStructFiles {
 		code.NamedStructs = append(code.NamedStructs, file)
 	}
+	sort.Slice(code.NamedStructs, func(i, j int) bool {
+		return code.NamedStructs[i].Name < code.NamedStructs[j].Name
+	})
 	return code, nil
 }

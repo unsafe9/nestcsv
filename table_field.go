@@ -84,15 +84,12 @@ func (f *TableField) printDebug(depth int) {
 	}
 }
 
-func (f *TableField) Equal(other *TableField) bool {
-	if f.Name != other.Name || f.Type != other.Type || f.IsMultiLineArray != other.IsMultiLineArray || f.IsCellArray != other.IsCellArray {
-		return false
-	}
+func (f *TableField) StructFieldsEqual(other *TableField) bool {
 	if len(f.StructFields) != len(other.StructFields) {
 		return false
 	}
 	for i, sf := range f.StructFields {
-		if !sf.Equal(other.StructFields[i]) {
+		if !sf.StructFieldsEqual(other.StructFields[i]) {
 			return false
 		}
 	}
