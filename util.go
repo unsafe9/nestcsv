@@ -137,6 +137,18 @@ func createFile(rootDir, fileName, ext string) (*os.File, error) {
 }
 
 func saveCSVFile(rootDir, fileName string, csvData [][]string) error {
+	maxLen := 0
+	for _, row := range csvData {
+		if len(row) > maxLen {
+			maxLen = len(row)
+		}
+	}
+	for i, row := range csvData {
+		if len(row) < maxLen {
+			csvData[i] = append(row, make([]string, maxLen-len(row))...)
+		}
+	}
+
 	file, err := createFile(rootDir, fileName, "csv")
 	if err != nil {
 		return fmt.Errorf("failed to create the file: %s, %w", fileName, err)

@@ -58,7 +58,7 @@ func (d *DatasourceExcel) Collect(out chan<- *TableData) error {
 					return err
 				}
 				if d.DebugSaveDir != nil {
-					if err := saveCSVFile(*d.DebugSaveDir, tableData.Name, tableData.CSV()); err != nil {
+					if err := saveCSVFile(*d.DebugSaveDir, sheet, rows); err != nil {
 						return err
 					}
 				}

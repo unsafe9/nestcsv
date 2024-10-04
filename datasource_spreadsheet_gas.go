@@ -68,7 +68,7 @@ func (d *DatasourceSpreadsheetGAS) Collect(out chan<- *TableData) error {
 				return err
 			}
 			if d.DebugSaveDir != nil {
-				if err := saveCSVFile(*d.DebugSaveDir, tableData.Name, tableData.CSV()); err != nil {
+				if err := saveCSVFile(*d.DebugSaveDir, zipFile.Name, rows); err != nil {
 					return err
 				}
 			}
