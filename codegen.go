@@ -12,8 +12,8 @@ type Codegen interface {
 }
 
 type CodegenConfig struct {
-	Go *CodegenGo `yaml:"go,omitempty"`
-	//UE5 *CodegenUE5 `yaml:"ue5,omitempty"`
+	Go  *CodegenGo  `yaml:"go,omitempty"`
+	UE5 *CodegenUE5 `yaml:"ue5,omitempty"`
 }
 
 func (c *CodegenConfig) List() []Codegen {
