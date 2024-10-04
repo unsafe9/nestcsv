@@ -15,6 +15,7 @@ var goEmptyImportRegexp = regexp.MustCompile(`import \(\s*\n\s*\)`)
 type CodegenGo struct {
 	RootDir      string `yaml:"root_dir"`
 	PackageName  string `yaml:"package_name"`
+	Loader       bool   `yaml:"loader"`
 	DataLoadPath string `yaml:"data_load_path"`
 }
 
@@ -36,13 +37,15 @@ func (c *CodegenGo) Generate(code *Code) error {
 		}
 	}
 
-	values := map[string]any{
-		"PackageName": c.PackageName,
-		"Tables":      code.Tables,
-	}
-	err := c.template("loader.go", "loader.go.tpl", values)
-	if err != nil {
-		return err
+	if c.Loader {
+		values := map[string]any{
+			"PackageName": c.PackageName,
+			"Tables":      code.Tables,
+		}
+		err := c.template("loader.go", "loader.go.tpl", values)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

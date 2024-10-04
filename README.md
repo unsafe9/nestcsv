@@ -42,6 +42,7 @@ codegen:
   go:
     root_dir: ./go
     package_name: table
+    loader: true
     data_load_path: ../json
   ue5:
     root_dir: ./ue5
