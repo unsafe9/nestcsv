@@ -10,43 +10,38 @@ go install github.com/unsafe9/nestcsv/cmd/nestcsv@latest
 Compose your configurations:
 ```yaml
 # nestcsv.yaml
-datasource:
-  spreadsheet_gas:
-    url: <YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_ENDPOINT>
-    password: <YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_PASSWORD>
-    google_drive_folder_ids:
-      - <YOUR_GOOGLE_DRIVE_FOLDER_ID>
-    spreadsheet_file_ids:
-      - <YOUR_GOOGLE_SPREADSHEET_FILE_ID>
-    debug_save_dir: ./debug
-  excel:
-    directories:
-      - <YOUR_EXCEL_FILE_DIRECTORY>
-    files:
-      - <YOUR_EXCEL_FILE>
-    extensions:
-      - .xlsx
-    debug_save_dir: ./debug
-  csv:
-    directories:
-      - <YOUR_CSV_FILE_DIRECTORY>
-    files:
-      - <YOUR_CSV_FILE>
+datasources:
+  - spreadsheet_gas:
+      url: <YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_ENDPOINT>
+      password: <YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_PASSWORD>
+      google_drive_folder_ids:
+        - <YOUR_GOOGLE_DRIVE_FOLDER_ID>
+      spreadsheet_file_ids:
+        - <YOUR_GOOGLE_SPREADSHEET_FILE_ID>
+      debug_save_dir: ./debug
+  - excel:
+      patterns:
+        - ./datasource/*.xlsx
+      debug_save_dir: ./debug
+  - csv:
+      patterns:
+        - ./datasource/*.csv
+        #- ./debug/*.csv
 
-output:
-  indent: "  "
-  root_dir: ./output
-  file_type: json
+outputs:
+  - root_dir: ./output
+    file_type: json
+    indent: "  "
 
-codegen:
-  go:
-    root_dir: ./go
-    package_name: table
-    loader: true
-    data_load_path: ../json
-  ue5:
-    root_dir: ./ue5
-    prefix: Nest
+codegens:
+  - go:
+      root_dir: ./go
+      package_name: table
+      loader: true
+      data_load_path: ../json
+  - ue5:
+      root_dir: ./ue5
+      prefix: Nest
     
 ```
 

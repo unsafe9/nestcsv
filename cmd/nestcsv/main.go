@@ -24,7 +24,7 @@ func main() {
 		defer close(out)
 
 		var wg errgroup.Group
-		for _, datasource := range config.Datasource.List() {
+		for _, datasource := range config.Datasources {
 			wg.Go(func() error {
 				return datasource.Collect(out)
 			})
@@ -46,8 +46,10 @@ func main() {
 			if err != nil {
 				return err
 			}
-			if err := config.Output.Encode(table); err != nil {
-				return err
+			for _, output := range config.Outputs {
+				if err := output.Encode(table); err != nil {
+					return err
+				}
 			}
 
 			mu.Lock()
@@ -65,7 +67,7 @@ func main() {
 		log.Fatalf("failed to analyze tables: %v", err)
 	}
 
-	for _, codegen := range config.Codegen.List() {
+	for _, codegen := range config.Codegens {
 		wg.Go(func() error {
 			return codegen.Generate(code)
 		})

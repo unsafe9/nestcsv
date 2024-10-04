@@ -6,12 +6,11 @@ import (
 	"fmt"
 	"github.com/Masterminds/sprig/v3"
 	"github.com/gertd/go-pluralize"
-	"io/fs"
 	"iter"
+	"log"
 	"os"
 	"path/filepath"
 	"reflect"
-	"slices"
 	"strings"
 	"text/template"
 )
@@ -57,65 +56,27 @@ func removeOne[T any](arr []T, f func(T) bool) []T {
 	return arr
 }
 
-func walkFiles(dirs []string, files []string, exts []string) iter.Seq[string] {
+func glob(patterns []string) iter.Seq[string] {
 	return func(yield func(string) bool) {
 		visited := make(map[string]struct{})
-		stop := false
-
-		for _, dir := range dirs {
-			err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
-				if err != nil {
-					return nil
-				}
-				if info.IsDir() {
-					return nil
-				}
-				if len(exts) > 0 {
-					ext := filepath.Ext(path)
-					if len(ext) > 0 && !slices.Contains(exts, ext[1:]) {
-						return nil
-					}
-				}
-
-				path, err = filepath.Rel(".", path)
-				if err != nil {
-					return nil
-				}
-
-				if _, ok := visited[path]; ok {
-					return nil
-				}
-				visited[path] = struct{}{}
-
-				if !yield(path) {
-					stop = true
-					return filepath.SkipAll
-				}
-
-				return nil
-			})
+		for _, pattern := range patterns {
+			matches, err := filepath.Glob(pattern)
 			if err != nil {
-				return
+				log.Panicf("failed to glob: %s, %v", pattern, err)
 			}
-			if stop {
-				return
-			}
-		}
+			for _, match := range matches {
+				match, err = filepath.Rel(".", match)
+				if err != nil {
+					log.Panicf("failed to get relative path: %s, %v", match, err)
+				}
+				if _, ok := visited[match]; ok {
+					continue
+				}
+				visited[match] = struct{}{}
 
-		for _, path := range files {
-			var err error
-			path, err = filepath.Rel(".", path)
-			if err != nil {
-				continue
-			}
-
-			if _, ok := visited[path]; ok {
-				continue
-			}
-			visited[path] = struct{}{}
-
-			if !yield(path) {
-				return
+				if !yield(match) {
+					return
+				}
 			}
 		}
 	}

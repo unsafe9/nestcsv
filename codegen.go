@@ -2,6 +2,7 @@ package nestcsv
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"iter"
 	"slices"
 	"sort"
@@ -13,12 +14,30 @@ type Codegen interface {
 }
 
 type CodegenConfig struct {
-	Go  *CodegenGo  `yaml:"go,omitempty"`
-	UE5 *CodegenUE5 `yaml:"ue5,omitempty"`
+	CodegenUnion `yaml:",inline"`
 }
 
-func (c *CodegenConfig) List() []Codegen {
-	return collectStructFieldsImplementing[Codegen](c)
+func (c *CodegenConfig) Generate(code *Code) error {
+	return c.loaded.Generate(code)
+}
+
+type CodegenUnion struct {
+	loaded Codegen     `yaml:"-"`
+	Go     *CodegenGo  `yaml:"go,omitempty"`
+	UE5    *CodegenUE5 `yaml:"ue5,omitempty"`
+}
+
+func (u *CodegenUnion) UnmarshalYAML(node *yaml.Node) error {
+	type wrapped CodegenUnion
+	if err := node.Decode((*wrapped)(u)); err != nil {
+		return err
+	}
+	list := collectStructFieldsImplementing[Codegen](u)
+	if len(list) != 1 {
+		return fmt.Errorf("expected exactly one codegen, got %d", len(list))
+	}
+	u.loaded = list[0]
+	return nil
 }
 
 type CodeStructField struct {

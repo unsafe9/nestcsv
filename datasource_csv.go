@@ -10,14 +10,13 @@ import (
 )
 
 type DatasourceCSV struct {
-	Directories []string `yaml:"directories"`
-	Files       []string `yaml:"files"`
+	Patterns []string `yaml:"patterns"`
 }
 
 func (d *DatasourceCSV) Collect(out chan<- *TableData) error {
 	ch := make(chan string, 1000)
 	go func() {
-		for path := range walkFiles(d.Directories, d.Files, []string{"csv"}) {
+		for path := range glob(d.Patterns) {
 			if strings.HasPrefix(filepath.Base(path), "#") {
 				continue
 			}

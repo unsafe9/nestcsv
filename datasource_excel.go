@@ -9,20 +9,14 @@ import (
 )
 
 type DatasourceExcel struct {
-	Directories  []string `yaml:"directories"`
-	Files        []string `yaml:"files"`
-	Extensions   []string `yaml:"extensions"`
+	Patterns     []string `yaml:"patterns"`
 	DebugSaveDir *string  `yaml:"debug_save_dir,omitempty"`
 }
 
 func (d *DatasourceExcel) Collect(out chan<- *TableData) error {
-	if len(d.Extensions) == 0 {
-		d.Extensions = []string{"xlsx", "xlsm", "xlsb", "xls"}
-	}
-
 	ch := make(chan string, 1000)
 	go func() {
-		for path := range walkFiles(d.Directories, d.Files, d.Extensions) {
+		for path := range glob(d.Patterns) {
 			if strings.HasPrefix(filepath.Base(path), "#") {
 				continue
 			}

@@ -1,18 +1,19 @@
-datasource:
-  csv:
-    directories:
-      - ./csv
+datasources:
+  - csv:
+      patterns:
+        - ./csv/*.csv
 
-output:
-  indent: "  "
-  root_dir: ./json
-  file_type: json
+outputs:
+  - indent: "  "
+    root_dir: ./json
+    file_type: json
 
-codegen:
-  go:
-    root_dir: ./go
-    package_name: table
-    data_load_path: ../json
-  ue5:
-    root_dir: ./ue5
-    prefix: "Nest"
+codegens:
+  - go:
+      root_dir: ./go
+      package_name: table
+      loader: true
+      data_load_path: ../json
+  - ue5:
+      root_dir: ./ue5
+      prefix: "Nest"

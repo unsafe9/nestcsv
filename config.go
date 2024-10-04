@@ -7,9 +7,9 @@ import (
 )
 
 type Config struct {
-	Datasource DatasourceConfig `yaml:"datasource"`
-	Output     TableEncoder     `yaml:"output"`
-	Codegen    CodegenConfig    `yaml:"codegen"`
+	Datasources []DatasourceConfig `yaml:"datasources"`
+	Outputs     []TableEncoder     `yaml:"outputs"`
+	Codegens    []CodegenConfig    `yaml:"codegens"`
 }
 
 func ParseConfig(configPath string) (*Config, error) {
