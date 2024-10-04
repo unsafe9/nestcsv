@@ -53,7 +53,8 @@ func (c *CodegenGo) template(fileName, templateName string, values any) error {
 		New(filepath.Base(templateName)).
 		Funcs(templateFuncMap).
 		Funcs(template.FuncMap{
-			"fieldType": c.fieldType,
+			"fieldType":     c.fieldType,
+			"fieldElemType": c.fieldElemType,
 		}).
 		ParseFS(templateFS, "templates/go/"+templateName)
 	if err != nil {
@@ -85,29 +86,31 @@ func (c *CodegenGo) template(fileName, templateName string, values any) error {
 }
 
 func (c *CodegenGo) fieldType(f *CodeStructField) string {
-	ret := ""
+	if f.IsArray {
+		return "[]" + c.fieldElemType(f)
+	}
+	return c.fieldElemType(f)
+}
+
+func (c *CodegenGo) fieldElemType(f *CodeStructField) string {
 	switch f.Type {
 	case FieldTypeInt:
-		ret = "int"
+		return "int"
 	case FieldTypeLong:
-		ret = "int64"
+		return "int64"
 	case FieldTypeFloat:
-		ret = "float64"
+		return "float64"
 	case FieldTypeBool:
-		ret = "bool"
+		return "bool"
 	case FieldTypeString:
-		ret = "string"
+		return "string"
 	case FieldTypeTime:
-		ret = "time.Time"
+		return "time.Time"
 	case FileTypeJSON:
-		ret = "interface{}"
+		return "interface{}"
 	case FieldTypeStruct:
-		ret = pascal(f.StructRef.Name)
+		return pascal(f.StructRef.Name)
 	default:
 		panic("unknown type: " + f.Type)
 	}
-	if f.IsArray {
-		ret = "[]" + ret
-	}
-	return ret
 }

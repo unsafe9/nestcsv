@@ -34,7 +34,8 @@ func (c *CodegenUE5) template(fileName, templateName string, values any) error {
 		New(filepath.Base(templateName)).
 		Funcs(templateFuncMap).
 		Funcs(template.FuncMap{
-			"fieldType": c.fieldType,
+			"fieldType":     c.fieldType,
+			"fieldElemType": c.fieldElemType,
 		}).
 		ParseFS(templateFS, "templates/ue5/"+templateName)
 	if err != nil {
@@ -44,29 +45,31 @@ func (c *CodegenUE5) template(fileName, templateName string, values any) error {
 }
 
 func (c *CodegenUE5) fieldType(f *CodeStructField) string {
-	ret := ""
+	if f.IsArray {
+		return "TArray<" + c.fieldElemType(f) + ">"
+	}
+	return c.fieldElemType(f)
+}
+
+func (c *CodegenUE5) fieldElemType(f *CodeStructField) string {
 	switch f.Type {
 	case FieldTypeInt:
-		ret = "int32"
+		return "int32"
 	case FieldTypeLong:
-		ret = "int64"
+		return "int64"
 	case FieldTypeFloat:
-		ret = "double"
+		return "double"
 	case FieldTypeBool:
-		ret = "bool"
+		return "bool"
 	case FieldTypeString:
-		ret = "FString"
+		return "FString"
 	case FieldTypeTime:
-		ret = "FDateTime"
+		return "FDateTime"
 	case FieldTypeJSON:
-		ret = "TSharedPtr<FJsonValue>"
+		return "TSharedPtr<FJsonValue>"
 	case FieldTypeStruct:
-		ret = "F" + c.Prefix + pascal(f.StructRef.Name)
+		return "F" + c.Prefix + pascal(f.StructRef.Name)
 	default:
 		panic("unknown type: " + f.Type)
 	}
-	if f.IsArray {
-		ret = "TArray<" + ret + ">"
-	}
-	return ret
 }

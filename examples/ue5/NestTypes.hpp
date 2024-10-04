@@ -41,11 +41,11 @@ public:
         FString TimeDtStr;
         if (JsonObject.ToSharedRef()->TryGetStringField(TEXT("Time"), TimeDtStr))
         {
-            FDateTime::ParseIso8601(TimeDtStr, Time);
+            FDateTime::ParseIso8601(*TimeDtStr, Time);
         }
         JsonObject.ToSharedRef()->TryGetField(TEXT("Json"), Json);
         const TArray<TSharedPtr<FJsonValue>>* IntArrayArray = nullptr;
-        if (JsonObject.TryGetArrayField(TEXT("IntArray"), IntArrayArray))
+        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("IntArray"), IntArrayArray))
         {
             for (const auto& Item : *IntArrayArray)
             {
@@ -53,7 +53,7 @@ public:
             }
         }
         const TArray<TSharedPtr<FJsonValue>>* LongArrayArray = nullptr;
-        if (JsonObject.TryGetArrayField(TEXT("LongArray"), LongArrayArray))
+        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("LongArray"), LongArrayArray))
         {
             for (const auto& Item : *LongArrayArray)
             {
@@ -61,7 +61,7 @@ public:
             }
         }
         const TArray<TSharedPtr<FJsonValue>>* FloatArrayArray = nullptr;
-        if (JsonObject.TryGetArrayField(TEXT("FloatArray"), FloatArrayArray))
+        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("FloatArray"), FloatArrayArray))
         {
             for (const auto& Item : *FloatArrayArray)
             {
@@ -69,7 +69,7 @@ public:
             }
         }
         const TArray<TSharedPtr<FJsonValue>>* StringArrayArray = nullptr;
-        if (JsonObject.TryGetArrayField(TEXT("StringArray"), StringArrayArray))
+        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("StringArray"), StringArrayArray))
         {
             for (const auto& Item : *StringArrayArray)
             {
@@ -77,7 +77,7 @@ public:
             }
         }
         const TArray<TSharedPtr<FJsonValue>>* TimeArrayArray = nullptr;
-        if (JsonObject.TryGetArrayField(TEXT("TimeArray"), TimeArrayArray))
+        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("TimeArray"), TimeArrayArray))
         {
             for (const auto& Item : *TimeArrayArray)
             {

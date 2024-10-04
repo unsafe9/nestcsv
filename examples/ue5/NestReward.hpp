@@ -41,10 +41,10 @@ public:
     {
         JsonObject.ToSharedRef()->TryGetStringField(TEXT("Type"), Type);
         JsonObject.ToSharedRef()->TryGetStringField(TEXT("ParamType"), ParamType);
-        TSharedPtr<FJsonObject> ParamValueObject;
-        if (JsonObject.ToSharedRef()->TryGetObjectField(TEXT("ParamValue"), ParamValueObject))
+        const TSharedPtr<FJsonObject> *ParamValueObjPtr;
+        if (JsonObject.ToSharedRef()->TryGetObjectField(TEXT("ParamValue"), ParamValueObjPtr))
         {
-            ParamValue.Load(ParamValueObject);
+            ParamValue.Load(*ParamValueObjPtr);
         }
     }
 };

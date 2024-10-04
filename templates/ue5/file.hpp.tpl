@@ -23,7 +23,7 @@ public:
         {{- range .Fields }}
         {{- if .IsArray }}
         const TArray<TSharedPtr<FJsonValue>>* {{ .Name }}Array = nullptr;
-        if (JsonObject.TryGetArrayField(TEXT("{{ .Name }}"), {{ .Name }}Array))
+        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("{{ .Name }}"), {{ .Name }}Array))
         {
             for (const auto& Item : *{{ .Name }}Array)
             {
@@ -49,7 +49,7 @@ public:
                 TSharedPtr<FJsonObject> Obj = Item->AsObject();
                 if (Obj.IsValid())
                 {
-                    {{ fieldType . }} ObjItem;
+                    {{ fieldElemType . }} ObjItem;
                     ObjItem.Load(Obj);
                     {{ .Name }}.Add(ObjItem);
                 }
@@ -70,15 +70,15 @@ public:
         FString {{ .Name }}DtStr;
         if (JsonObject.ToSharedRef()->TryGetStringField(TEXT("{{ .Name }}"), {{ .Name }}DtStr))
         {
-            FDateTime::ParseIso8601({{ .Name }}DtStr, {{ .Name }});
+            FDateTime::ParseIso8601(*{{ .Name }}DtStr, {{ .Name }});
         }
         {{- else if eq .Type "json" }}
         JsonObject.ToSharedRef()->TryGetField(TEXT("{{ .Name }}"), {{ .Name }});
         {{- else if eq .Type "struct" }}
-        TSharedPtr<FJsonObject> {{ .Name }}Object;
-        if (JsonObject.ToSharedRef()->TryGetObjectField(TEXT("{{ .Name }}"), {{ .Name }}Object))
+        const TSharedPtr<FJsonObject> *{{ .Name }}ObjPtr;
+        if (JsonObject.ToSharedRef()->TryGetObjectField(TEXT("{{ .Name }}"), {{ .Name }}ObjPtr))
         {
-            {{ .Name }}.Load({{ .Name }}Object);
+            {{ .Name }}.Load(*{{ .Name }}ObjPtr);
         }
         {{- end }}
         {{- end }}

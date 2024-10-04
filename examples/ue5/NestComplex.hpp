@@ -41,7 +41,7 @@ public:
     {
         JsonObject.ToSharedRef()->TryGetNumberField(TEXT("ID"), ID);
         const TArray<TSharedPtr<FJsonValue>>* TagsArray = nullptr;
-        if (JsonObject.TryGetArrayField(TEXT("Tags"), TagsArray))
+        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("Tags"), TagsArray))
         {
             for (const auto& Item : *TagsArray)
             {
@@ -49,28 +49,28 @@ public:
             }
         }
         const TArray<TSharedPtr<FJsonValue>>* SKUArray = nullptr;
-        if (JsonObject.TryGetArrayField(TEXT("SKU"), SKUArray))
+        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("SKU"), SKUArray))
         {
             for (const auto& Item : *SKUArray)
             {
                 TSharedPtr<FJsonObject> Obj = Item->AsObject();
                 if (Obj.IsValid())
                 {
-                    TArray<FNestComplexSKU> ObjItem;
+                    FNestComplexSKU ObjItem;
                     ObjItem.Load(Obj);
                     SKU.Add(ObjItem);
                 }
             }
         }
         const TArray<TSharedPtr<FJsonValue>>* RewardsArray = nullptr;
-        if (JsonObject.TryGetArrayField(TEXT("Rewards"), RewardsArray))
+        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("Rewards"), RewardsArray))
         {
             for (const auto& Item : *RewardsArray)
             {
                 TSharedPtr<FJsonObject> Obj = Item->AsObject();
                 if (Obj.IsValid())
                 {
-                    TArray<FNestReward> ObjItem;
+                    FNestReward ObjItem;
                     ObjItem.Load(Obj);
                     Rewards.Add(ObjItem);
                 }
