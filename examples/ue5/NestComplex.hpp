@@ -33,9 +33,9 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TArray<FString> Tags;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    TArray<NestComplexSKU> SKU;
+    TArray<FNestComplexSKU> SKU;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    TArray<NestReward> Rewards;
+    TArray<FNestReward> Rewards;
 
     void Load(const TSharedPtr<FJsonObject>& JsonObject)
     {
@@ -56,7 +56,7 @@ public:
                 TSharedPtr<FJsonObject> Obj = Item->AsObject();
                 if (Obj.IsValid())
                 {
-                    TArray<NestComplexSKU> ObjItem;
+                    TArray<FNestComplexSKU> ObjItem;
                     ObjItem.Load(Obj);
                     SKU.Add(ObjItem);
                 }
@@ -70,7 +70,7 @@ public:
                 TSharedPtr<FJsonObject> Obj = Item->AsObject();
                 if (Obj.IsValid())
                 {
-                    TArray<NestReward> ObjItem;
+                    TArray<FNestReward> ObjItem;
                     ObjItem.Load(Obj);
                     Rewards.Add(ObjItem);
                 }

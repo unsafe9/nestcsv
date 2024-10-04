@@ -35,7 +35,7 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FString ParamType;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    NestRewardParamValue ParamValue;
+    FNestRewardParamValue ParamValue;
 
     void Load(const TSharedPtr<FJsonObject>& JsonObject)
     {

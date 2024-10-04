@@ -61,7 +61,7 @@ func (c *CodegenUE5) fieldType(f *CodeStructField) string {
 	case FieldTypeJSON:
 		ret = "TSharedPtr<FJsonValue>"
 	case FieldTypeStruct:
-		ret = c.Prefix + pascal(f.StructRef.Name)
+		ret = "F" + c.Prefix + pascal(f.StructRef.Name)
 	default:
 		panic("unknown type: " + f.Type)
 	}
