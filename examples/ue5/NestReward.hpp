@@ -2,13 +2,10 @@
 
 #include "Json.h"
 
-
 USTRUCT(BlueprintType)
 struct FNestRewardParamValue
 {
-    GENERATED_USTRUCT_BODY()
-
-public:
+    GENERATED_BODY()
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 Int;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -27,9 +24,7 @@ public:
 USTRUCT(BlueprintType)
 struct FNestReward
 {
-    GENERATED_USTRUCT_BODY()
-
-public:
+    GENERATED_BODY()
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FString Type;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)

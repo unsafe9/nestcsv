@@ -3,13 +3,10 @@
 #include "Json.h"
 #include "NestReward.hpp"
 
-
 USTRUCT(BlueprintType)
 struct FNestComplexSKU
 {
-    GENERATED_USTRUCT_BODY()
-
-public:
+    GENERATED_BODY()
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FString Type;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -25,9 +22,7 @@ public:
 USTRUCT(BlueprintType)
 struct FNestComplex
 {
-    GENERATED_USTRUCT_BODY()
-
-public:
+    GENERATED_BODY()
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 ID;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)

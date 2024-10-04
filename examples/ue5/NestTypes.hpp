@@ -2,13 +2,10 @@
 
 #include "Json.h"
 
-
 USTRUCT(BlueprintType)
 struct FNestTypes
 {
-    GENERATED_USTRUCT_BODY()
-
-public:
+    GENERATED_BODY()
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 Int;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)

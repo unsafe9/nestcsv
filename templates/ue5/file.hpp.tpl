@@ -5,14 +5,12 @@
 {{- range .FileRefs }}
 #include "{{ $.Prefix }}{{ pascal .Name }}.hpp"
 {{- end }}
-
 {{ range append .AnonymousStructs .Struct }}
 USTRUCT(BlueprintType)
 struct F{{ $.Prefix }}{{ pascal .Name }}
 {
-    GENERATED_USTRUCT_BODY()
+    GENERATED_BODY()
 
-public:
     {{- range .Fields }}
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     {{ fieldType . }} {{ .Name }};
