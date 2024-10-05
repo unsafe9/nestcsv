@@ -1,4 +1,4 @@
-,,,,,,,,,,
+as_map=true,,,,,,,,,,
 all,all,all,all,all,all,all,all,all,all,all
 Int,Long,Float,String,Time,Json,IntArray,LongArray,FloatArray,StringArray,TimeArray
 int,long,float,string,time,json,[]int,[]long,[]float,[]string,[]time

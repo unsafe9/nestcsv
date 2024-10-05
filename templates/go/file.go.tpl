@@ -23,7 +23,11 @@ type {{ pascal .Name }} struct {
 
 {{ if .IsTable }}
 type {{ pascal .Struct.Name }}Table struct{
+    {{- if .IsMap }}
+    Rows map[string]{{ pascal .Struct.Name }}
+    {{- else }}
     Rows []{{ pascal .Struct.Name }}
+    {{- end }}
 }
 
 func (t *{{ pascal .Struct.Name }}Table) SheetName() string {

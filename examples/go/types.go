@@ -23,7 +23,7 @@ type Types struct {
 }
 
 type TypesTable struct {
-	Rows []Types
+	Rows map[string]Types
 }
 
 func (t *TypesTable) SheetName() string {

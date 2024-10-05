@@ -21,6 +21,7 @@ type CodeStruct struct {
 
 type CodeFile struct {
 	IsTable          bool
+	IsMap            bool
 	Name             string
 	Struct           *CodeStruct
 	AnonymousStructs []*CodeStruct
@@ -150,6 +151,7 @@ func (a *codeAnalyzer) getOrAddNamedStructFile(table *codeAnalyzerTable, name st
 func (a *codeAnalyzer) addTableFile(table *codeAnalyzerTable) (*CodeFile, error) {
 	file := &CodeFile{
 		IsTable: true,
+		IsMap:   table.metadata.AsMap,
 		Name:    table.name,
 	}
 	fileStruct, err := a.buildStruct(file, table, table.name, table.fields)
