@@ -35,15 +35,6 @@ func findPtr[T any](arr []*T, f func(*T) bool) *T {
 	return nil
 }
 
-func isAllStringEmpty(arr []string) bool {
-	for _, v := range arr {
-		if v != "" {
-			return false
-		}
-	}
-	return true
-}
-
 func equalPtr(a, b any) bool {
 	return reflect.ValueOf(a).Pointer() == reflect.ValueOf(b).Pointer()
 }

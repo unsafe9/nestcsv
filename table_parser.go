@@ -243,9 +243,10 @@ func (p *tableParser) parseGoValue(typ FieldType, cell string) (any, error) {
 }
 
 func (p *tableParser) checkAllCellsEmpty(field *TableField, row []string) bool {
-	var cells []string
 	for f := range field.Iterate() {
-		cells = append(cells, row[f.column])
+		if row[f.column] != "" {
+			return false
+		}
 	}
-	return isAllStringEmpty(cells)
+	return true
 }
