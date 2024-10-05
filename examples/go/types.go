@@ -48,7 +48,7 @@ func (t *TypesTable) Load() error {
 	if err != nil {
 		return err
 	}
-	checksum := md5.Sum(t.Data)
+	checksum := md5.Sum(t.rawData)
 	t.checksum = hex.EncodeToString(checksum[:])
 	return nil
 }
