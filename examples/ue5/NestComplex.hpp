@@ -34,7 +34,11 @@ struct FNestComplex
         {
             for (const auto& Item : *TagsArray)
             {
-                Tags.Add(Item->AsString());
+                FString FieldItem;
+                if (Item->TryGetString(FieldItem))
+                {
+                    Tags.Add(FieldItem);
+                }
             }
         }
         const TArray<TSharedPtr<FJsonValue>>* SKUArray = nullptr;
@@ -42,12 +46,12 @@ struct FNestComplex
         {
             for (const auto& Item : *SKUArray)
             {
-                TSharedPtr<FJsonObject> Obj = Item->AsObject();
-                if (Obj.IsValid())
+                const TSharedPtr<FJsonObject> *JsonObject;
+                if (Item->TryGetObject(JsonObject))
                 {
-                    FNestComplexSKU ObjItem;
-                    ObjItem.Load(Obj);
-                    SKU.Add(ObjItem);
+                    FNestComplexSKU FieldItem;
+                    ObjItem.Load(JsonObject);
+                    SKU.Add(FieldItem);
                 }
             }
         }

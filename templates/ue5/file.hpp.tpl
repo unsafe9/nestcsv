@@ -25,31 +25,41 @@ struct F{{ $.Prefix }}{{ pascal .Name }}
         {
             for (const auto& Item : *{{ .Name }}Array)
             {
-                {{- if eq .Type "int" }}
-                {{ .Name }}.Add(Item->AsNumber());
-                {{- else if eq .Type "long" }}
-                {{ .Name }}.Add(Item->AsNumber());
-                {{- else if eq .Type "float" }}
-                {{ .Name }}.Add(Item->AsNumber());
-                {{- else if eq .Type "bool" }}
-                {{ .Name }}.Add(Item->AsBool());
-                {{- else if eq .Type "string" }}
-                {{ .Name }}.Add(Item->AsString());
-                {{- else if eq .Type "time" }}
-                FDateTime Dt;
-                if (FDateTime::ParseIso8601(Item->AsString(), Dt))
+                {{- if eq .Type "time" }}
+                FString DateTimeStr;
+                if (Item->TryGetString(DateTimeStr))
                 {
-                    {{ .Name }}.Add(Dt);
+                    FDateTime DateTime;
+                    if (FDateTime::ParseIso8601(DateTimeStr, DateTime))
+                    {
+                        {{ .Name }}.Add(DateTime);
+                    }
                 }
                 {{- else if eq .Type "json" }}
                 {{ .Name }}.Add(Item);
                 {{- else if eq .Type "struct" }}
-                TSharedPtr<FJsonObject> Obj = Item->AsObject();
-                if (Obj.IsValid())
+                const TSharedPtr<FJsonObject> *JsonObject;
+                if (Item->TryGetObject(JsonObject))
                 {
-                    {{ fieldElemType . }} ObjItem;
-                    ObjItem.Load(Obj);
-                    {{ .Name }}.Add(ObjItem);
+                    {{ fieldElemType . }} FieldItem;
+                    ObjItem.Load(JsonObject);
+                    {{ .Name }}.Add(FieldItem);
+                }
+                {{- else }}
+                {{ fieldElemType . }} FieldItem;
+                {{- if eq .Type "int" }}
+                if (Item->TryGetNumber(FieldItem))
+                {{- else if eq .Type "long" }}
+                if (Item->TryGetNumber(FieldItem))
+                {{- else if eq .Type "float" }}
+                if (Item->TryGetNumber(FieldItem))
+                {{- else if eq .Type "bool" }}
+                if (Item->TryGetBool(FieldItem))
+                {{- else if eq .Type "string" }}
+                if (Item->TryGetString(FieldItem))
+                {{- end }}
+                {
+                    {{ .Name }}.Add(FieldItem);
                 }
                 {{- end }}
             }

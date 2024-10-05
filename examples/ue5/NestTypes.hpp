@@ -46,7 +46,11 @@ struct FNestTypes
         {
             for (const auto& Item : *IntArrayArray)
             {
-                IntArray.Add(Item->AsNumber());
+                int32 FieldItem;
+                if (Item->TryGetNumber(FieldItem))
+                {
+                    IntArray.Add(FieldItem);
+                }
             }
         }
         const TArray<TSharedPtr<FJsonValue>>* LongArrayArray = nullptr;
@@ -54,7 +58,11 @@ struct FNestTypes
         {
             for (const auto& Item : *LongArrayArray)
             {
-                LongArray.Add(Item->AsNumber());
+                int64 FieldItem;
+                if (Item->TryGetNumber(FieldItem))
+                {
+                    LongArray.Add(FieldItem);
+                }
             }
         }
         const TArray<TSharedPtr<FJsonValue>>* FloatArrayArray = nullptr;
@@ -62,7 +70,11 @@ struct FNestTypes
         {
             for (const auto& Item : *FloatArrayArray)
             {
-                FloatArray.Add(Item->AsNumber());
+                double FieldItem;
+                if (Item->TryGetNumber(FieldItem))
+                {
+                    FloatArray.Add(FieldItem);
+                }
             }
         }
         const TArray<TSharedPtr<FJsonValue>>* StringArrayArray = nullptr;
@@ -70,7 +82,11 @@ struct FNestTypes
         {
             for (const auto& Item : *StringArrayArray)
             {
-                StringArray.Add(Item->AsString());
+                FString FieldItem;
+                if (Item->TryGetString(FieldItem))
+                {
+                    StringArray.Add(FieldItem);
+                }
             }
         }
         const TArray<TSharedPtr<FJsonValue>>* TimeArrayArray = nullptr;
@@ -78,10 +94,14 @@ struct FNestTypes
         {
             for (const auto& Item : *TimeArrayArray)
             {
-                FDateTime Dt;
-                if (FDateTime::ParseIso8601(Item->AsString(), Dt))
+                FString DateTimeStr;
+                if (Item->TryGetString(DateTimeStr))
                 {
-                    TimeArray.Add(Dt);
+                    FDateTime DateTime;
+                    if (FDateTime::ParseIso8601(DateTimeStr, DateTime))
+                    {
+                        TimeArray.Add(DateTime);
+                    }
                 }
             }
         }
