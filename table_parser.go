@@ -88,9 +88,10 @@ func (p *TableParser) ParseTableFields(tags []string) ([]*TableField, error) {
 
 func (p *TableParser) Marshal(fields []*TableField) (any, error) {
 	var (
-		td        = p.td
-		rowMap    = make(map[string]map[string]any)
-		rowIdxMap = make(map[string]int)
+		td         = p.td
+		rowMap     = make(map[string]map[string]any)
+		rows       = make([]map[string]any, 0, len(rowMap))
+		rowIndices = make([]int, 0, len(rowMap))
 
 		multiLineArrayRowCount = make(map[string]int)
 	)
@@ -101,7 +102,11 @@ func (p *TableParser) Marshal(fields []*TableField) (any, error) {
 		if !isMultiLineRow {
 			rowContainer = make(map[string]any)
 			rowMap[id] = rowContainer
-			rowIdxMap[id] = rowIdx
+
+			if !td.Metadata.AsMap {
+				rows = append(rows, rowContainer)
+				rowIndices = append(rowIndices, rowIdx)
+			}
 		}
 
 		for _, topField := range fields {
@@ -188,12 +193,6 @@ func (p *TableParser) Marshal(fields []*TableField) (any, error) {
 		return m, nil
 
 	} else {
-		rows := make([]map[string]any, 0, len(rowMap))
-		rowIndices := make([]int, 0, len(rowMap))
-		for id, row := range rowMap {
-			rows = append(rows, row)
-			rowIndices = append(rowIndices, rowIdxMap[id])
-		}
 		if td.Metadata.SortAscBy != "" {
 			p.sortValues(rows, rowIndices, td.Metadata.SortAscBy, false)
 		} else if td.Metadata.SortDescBy != "" {
