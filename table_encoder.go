@@ -50,7 +50,15 @@ func (e *TableEncoder) Encode(tableData *TableData) error {
 }
 
 func (e *TableEncoder) saveAsJson(name string, value any) error {
-	jsonBytes, err := json.MarshalIndent(value, "", e.Indent)
+	var (
+		jsonBytes []byte
+		err       error
+	)
+	if e.Indent == "" {
+		jsonBytes, err = json.Marshal(value)
+	} else {
+		jsonBytes, err = json.MarshalIndent(value, "", e.Indent)
+	}
 	if err != nil {
 		return err
 	}
