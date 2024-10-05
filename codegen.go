@@ -156,14 +156,17 @@ func (a *codeAnalyzer) getOrAddNamedStructFile(table *Table, name string, field 
 		return a.namedStructFiles[name], nil
 	}
 
+	file := &CodeFile{
+		Name: name,
+	}
 	for _, f := range field.StructFields {
 		f.ParentField = nil
 	}
-
-	file, err := a.buildFile(table, name, field.StructFields)
+	fileStruct, err := a.buildStruct(file, table, name, field.StructFields)
 	if err != nil {
 		return nil, err
 	}
+	file.Struct = fileStruct
 
 	a.namedStructFileFields[name] = field
 	a.namedStructFiles[name] = file
@@ -171,26 +174,17 @@ func (a *codeAnalyzer) getOrAddNamedStructFile(table *Table, name string, field 
 }
 
 func (a *codeAnalyzer) addTableFile(table *Table) (*CodeFile, error) {
-	file, err := a.buildFile(table, table.Name, table.Fields)
-	if err != nil {
-		return nil, err
-	}
-
-	a.tableFiles[table.Name] = file
-	return file, nil
-}
-
-func (a *codeAnalyzer) buildFile(table *Table, name string, fields []*TableField) (*CodeFile, error) {
 	file := &CodeFile{
 		Table: table,
-		Name:  name,
+		Name:  table.Name,
 	}
-	fileStruct, err := a.buildStruct(file, table, name, fields)
+	fileStruct, err := a.buildStruct(file, table, table.Name, table.Fields)
 	if err != nil {
 		return nil, err
 	}
 	file.Struct = fileStruct
 
+	a.tableFiles[table.Name] = file
 	return file, nil
 }
 
