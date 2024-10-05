@@ -68,13 +68,13 @@ func (f *TableField) Identifier() string {
 	return f.Name
 }
 
-func (f *TableField) IsInMultiLineArray() bool {
+func (f *TableField) GetMultiLineArrayField() *TableField {
 	for p := f; p != nil; p = p.ParentField {
 		if p.IsMultiLineArray {
-			return true
+			return p
 		}
 	}
-	return false
+	return nil
 }
 
 func (f *TableField) printDebug(depth int) {

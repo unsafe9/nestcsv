@@ -28,41 +28,9 @@ func (p *tableParser) parse() (*Table, error) {
 			Fields:   make([]*TableField, 0, td.Columns),
 			Values:   make([]map[string]any, 0, len(td.DataRows)),
 		}
-		rowMap                 = make(map[string]map[string]any)
-		multiLineArrayRowCount = make(map[string]int)
-		multiLineArrayIdxMap   = make(map[int]int)
 	)
 
-	idField := &TableField{
-		Name: td.FieldNames[TableFieldIndexCol],
-		Type: FieldType(td.FieldTypes[TableFieldIndexCol]),
-	}
-	table.Fields = append(table.Fields, idField)
-
-	for i := 0; i < len(td.DataRows); i++ {
-		id := td.DataRows[i][TableFieldIndexCol]
-
-		if value, ok := rowMap[id]; ok {
-			if _, ok := multiLineArrayRowCount[id]; !ok {
-				multiLineArrayRowCount[id] = 2
-			} else {
-				multiLineArrayRowCount[id]++
-			}
-			multiLineArrayIdxMap[i] = multiLineArrayRowCount[id] - 1
-		} else {
-			idValue, err := p.parseGoValue(idField.Type, id)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse id value: %s, %s, %d, %s, %w", table.Name, td.FieldNames[0], i, id, err)
-			}
-			value = map[string]any{
-				idField.Name: idValue,
-			}
-			table.Values = append(table.Values, value)
-			rowMap[id] = value
-		}
-	}
-
-	for col := TableFieldIndexCol + 1; col < td.Columns; col++ {
+	for col := 0; col < td.Columns; col++ {
 		var (
 			nameTokens             = strings.Split(td.FieldNames[col], ".")
 			tokenLen               = len(nameTokens)
@@ -117,14 +85,37 @@ func (p *tableParser) parse() (*Table, error) {
 		}
 	}
 
-	for rowIdx, row := range td.DataRows {
-		for _, topField := range table.Fields {
-			container := rowMap[row[TableFieldIndexCol]]
-			for field := range topField.Iterate() {
-				multiLineArrayIdx := multiLineArrayIdxMap[rowIdx]
+	var (
+		rowMap                 = make(map[string]map[string]any)
+		multiLineArrayRowCount = make(map[string]int)
+	)
 
-				// skip if it's non array fields
-				if multiLineArrayIdx > 0 && !field.IsInMultiLineArray() {
+	for rowIdx, row := range td.DataRows {
+		id := row[TableFieldIndexCol]
+		rowContainer, isMultiLineRow := rowMap[id]
+		if !isMultiLineRow {
+			rowContainer = make(map[string]any)
+			rowMap[id] = rowContainer
+			table.Values = append(table.Values, rowContainer)
+		}
+
+		for _, topField := range table.Fields {
+			container := rowContainer
+			for field := range topField.Iterate() {
+				var multiLineArrayIdx int
+				multiLineArrayField := field.GetMultiLineArrayField()
+				if multiLineArrayField != nil {
+					rowCountIdx := id + "_" + multiLineArrayField.Identifier()
+					if multiLineArrayField == field {
+						if p.checkAllCellsEmpty(field, row) {
+							break
+						}
+						multiLineArrayRowCount[rowCountIdx]++
+					}
+					multiLineArrayIdx = multiLineArrayRowCount[rowCountIdx] - 1
+
+				} else if isMultiLineRow {
+					// skip if it's non array fields
 					continue
 				}
 
@@ -139,18 +130,6 @@ func (p *tableParser) parse() (*Table, error) {
 						if len(objectArray) <= multiLineArrayIdx {
 							v := make(map[string]any)
 							objectArray = append(objectArray, v)
-
-							// remove the object if all cells are empty
-							if p.checkAllCellsEmpty(field, row) {
-								defer func(container map[string]any, name string) {
-									container[name] = removeOne(
-										container[name].([]map[string]any),
-										func(m map[string]any) bool {
-											return equalPtr(m, v)
-										},
-									)
-								}(container, field.Name)
-							}
 						}
 						container[field.Name] = objectArray
 						container = objectArray[multiLineArrayIdx]
