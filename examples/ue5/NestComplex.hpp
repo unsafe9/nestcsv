@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Json.h"
+#include "NestTableDataBase.h"
 
 USTRUCT(BlueprintType)
-struct FNestComplexSKU
+struct FNestComplexSKU : public FNestTableDataBase
 {
     GENERATED_BODY()
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -11,7 +11,7 @@ struct FNestComplexSKU
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FString ID;
 
-    void Load(const TSharedPtr<FJsonObject>& JsonObject)
+    void Load(const TSharedPtr<FJsonObject>& JsonObject) override
     {
         JsonObject.ToSharedRef()->TryGetStringField(TEXT("Type"), Type);
         JsonObject.ToSharedRef()->TryGetStringField(TEXT("ID"), ID);
@@ -19,7 +19,7 @@ struct FNestComplexSKU
 };
 
 USTRUCT(BlueprintType)
-struct FNestComplex
+struct FNestComplex : public FNestTableDataBase
 {
     GENERATED_BODY()
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -27,7 +27,7 @@ struct FNestComplex
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TArray<FNestComplexSKU> SKU;
 
-    void Load(const TSharedPtr<FJsonObject>& JsonObject)
+    void Load(const TSharedPtr<FJsonObject>& JsonObject) override
     {
         const TArray<TSharedPtr<FJsonValue>>* TagsArray = nullptr;
         if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("Tags"), TagsArray))

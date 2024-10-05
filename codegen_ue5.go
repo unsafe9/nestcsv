@@ -11,20 +11,36 @@ type CodegenUE5 struct {
 }
 
 func (c *CodegenUE5) Generate(code *Code) error {
+	values := map[string]any{
+		"Prefix": c.Prefix,
+	}
+	if err := c.template("TableDataBase.h", "TableDataBase.h.tpl", values); err != nil {
+		return err
+	}
+	if err := c.template("TableBase.h", "TableBase.h.tpl", values); err != nil {
+		return err
+	}
+
 	for file := range code.Files() {
 		values := map[string]any{
 			"File":   file,
 			"Prefix": c.Prefix,
 		}
-		if err := c.template(c.Prefix+pascal(file.Name)+".hpp", "file.hpp.tpl", values); err != nil {
+		if err := c.template(pascal(file.Name)+".hpp", "file.hpp.tpl", values); err != nil {
 			return err
+		}
+
+		if file.IsTable {
+			if err := c.template(pascal(file.Name)+"Table.hpp", "table.hpp.tpl", values); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
 func (c *CodegenUE5) template(fileName, templateName string, values any) error {
-	file, err := createFile(c.RootDir, fileName, filepath.Ext(fileName))
+	file, err := createFile(c.RootDir, c.Prefix+fileName, filepath.Ext(fileName))
 	if err != nil {
 		return err
 	}

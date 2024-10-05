@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Json.h"
+#include "NestTableDataBase.h"
 
 USTRUCT(BlueprintType)
-struct FNestTypes
+struct FNestTypes : public FNestTableDataBase
 {
     GENERATED_BODY()
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -29,7 +29,7 @@ struct FNestTypes
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TArray<FDateTime> TimeArray;
 
-    void Load(const TSharedPtr<FJsonObject>& JsonObject)
+    void Load(const TSharedPtr<FJsonObject>& JsonObject) override
     {
         JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Int"), Int);
         JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Long"), Long);

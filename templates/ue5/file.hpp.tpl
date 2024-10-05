@@ -1,13 +1,13 @@
 {{- with .File -}}
 #pragma once
 
-#include "Json.h"
+#include "{{ $.Prefix }}TableDataBase.h"
 {{- range .FileRefs }}
 #include "{{ $.Prefix }}{{ pascal .Name }}.hpp"
 {{- end }}
 {{ range append .AnonymousStructs .Struct }}
 USTRUCT(BlueprintType)
-struct F{{ $.Prefix }}{{ pascal .Name }}
+struct F{{ $.Prefix }}{{ pascal .Name }} : public F{{ $.Prefix }}TableDataBase
 {
     GENERATED_BODY()
 
@@ -16,7 +16,7 @@ struct F{{ $.Prefix }}{{ pascal .Name }}
     {{ fieldType . }} {{ .Name }};
     {{- end }}
 
-    void Load(const TSharedPtr<FJsonObject>& JsonObject)
+    void Load(const TSharedPtr<FJsonObject>& JsonObject) override
     {
         {{- range .Fields }}
         {{- if .IsArray }}
