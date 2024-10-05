@@ -10,6 +10,11 @@ struct FNestTypesTable : public FNestTableBase
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TMap<FString, FNestTypes> Rows;
+    
+    virtual FString GetSheetName() const override
+    {
+        return TEXT("types");
+    }
 
     virtual void Load(const TSharedPtr<FJsonValue>& JsonValue) override
     {

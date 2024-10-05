@@ -15,6 +15,11 @@ struct F{{ $.Prefix }}{{ pascal .Name }}Table : public F{{ $.Prefix }}TableBase
     {{- else }}
     TArray<F{{ $.Prefix }}{{ pascal .Name }}> Rows;
     {{- end }}
+    
+    virtual FString GetSheetName() const override
+    {
+        return TEXT("{{ .Name }}");
+    }
 
     virtual void Load(const TSharedPtr<FJsonValue>& JsonValue) override
     {

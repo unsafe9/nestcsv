@@ -10,6 +10,11 @@ struct FNestComplexTable : public FNestTableBase
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TArray<FNestComplex> Rows;
+    
+    virtual FString GetSheetName() const override
+    {
+        return TEXT("complex");
+    }
 
     virtual void Load(const TSharedPtr<FJsonValue>& JsonValue) override
     {
