@@ -1,0 +1,73 @@
+[
+  {
+    "ID": 1,
+    "Rewards": [
+      {
+        "ParamType": "Int",
+        "ParamValue": {
+          "Float": 0,
+          "Int": 10,
+          "Str": ""
+        },
+        "Type": "Gold"
+      },
+      {
+        "ParamType": "Str",
+        "ParamValue": {
+          "Float": 0,
+          "Int": 0,
+          "Str": "Weapon"
+        },
+        "Type": "Gear"
+      }
+    ],
+    "SKU": [
+      {
+        "ID": "IAP_Google_1",
+        "Type": "Google"
+      }
+    ]
+  },
+  {
+    "ID": 2,
+    "Rewards": [
+      {
+        "ParamType": "Float",
+        "ParamValue": {
+          "Float": 0.5,
+          "Int": 0,
+          "Str": ""
+        },
+        "Type": "Dollar"
+      },
+      {
+        "ParamType": "Float",
+        "ParamValue": {
+          "Float": 0.8,
+          "Int": 0,
+          "Str": ""
+        },
+        "Type": "Dollar"
+      },
+      {
+        "ParamType": "Float",
+        "ParamValue": {
+          "Float": 0.9,
+          "Int": 0,
+          "Str": ""
+        },
+        "Type": "Dollar"
+      }
+    ],
+    "SKU": [
+      {
+        "ID": "IAP_Google_2",
+        "Type": "Google"
+      },
+      {
+        "ID": "IAP_Apple_2",
+        "Type": "Apple"
+      }
+    ]
+  }
+]

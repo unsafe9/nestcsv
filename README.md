@@ -30,16 +30,19 @@ datasources:
 
 outputs:
   - root_dir: ./output
+    tags: [server, client]
     file_type: json
     indent: "  "
 
 codegens:
-  - go:
+  - tags: [server]
+    go:
       root_dir: ./go
       package_name: table
       loader: true
       data_load_path: ../json
-  - ue5:
+  - tags: [client]
+    ue5:
       root_dir: ./ue5
       prefix: Nest
     

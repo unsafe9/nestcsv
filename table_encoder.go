@@ -12,12 +12,26 @@ const (
 )
 
 type TableEncoder struct {
-	RootDir  string `yaml:"root_dir"`
-	Indent   string `yaml:"indent"`
-	FileType string `yaml:"file_type"`
+	Tags     []string `yaml:"tags"`
+	RootDir  string   `yaml:"root_dir"`
+	Indent   string   `yaml:"indent"`
+	FileType string   `yaml:"file_type"`
 }
 
-func (e *TableEncoder) Encode(table *Table) error {
+func (e *TableEncoder) Encode(tableData *TableData) error {
+	tableParser := NewTableParser(tableData)
+	tableFields, err := tableParser.ParseTableFields(e.Tags)
+	if err != nil {
+		return err
+	}
+	if len(tableFields) == 0 {
+		return nil
+	}
+	value, err := tableParser.Marshal(tableFields)
+	if err != nil {
+		return err
+	}
+
 	if e.RootDir == "" {
 		e.RootDir = "."
 	}
@@ -26,22 +40,22 @@ func (e *TableEncoder) Encode(table *Table) error {
 	}
 
 	if e.FileType == FileTypeJSON {
-		return e.saveAsJson(table)
+		return e.saveAsJson(tableData.Name, value)
 
 	} else if e.FileType == FileTypeBin {
-		return e.saveAsBin(table)
+		return e.saveAsBin(tableData.Name, value)
 	}
 
 	return fmt.Errorf("invalid file type: %s", e.FileType)
 }
 
-func (e *TableEncoder) saveAsJson(table *Table) error {
-	jsonBytes, err := json.MarshalIndent(table.Marshal(), "", e.Indent)
+func (e *TableEncoder) saveAsJson(name string, value any) error {
+	jsonBytes, err := json.MarshalIndent(value, "", e.Indent)
 	if err != nil {
 		return err
 	}
 
-	file, err := createFile(e.RootDir, table.Name, "json")
+	file, err := createFile(e.RootDir, name, "json")
 	if err != nil {
 		return err
 	}
@@ -53,13 +67,13 @@ func (e *TableEncoder) saveAsJson(table *Table) error {
 	return nil
 }
 
-func (e *TableEncoder) saveAsBin(table *Table) error {
-	jsonBytes, err := json.Marshal(table.Marshal())
+func (e *TableEncoder) saveAsBin(name string, value any) error {
+	jsonBytes, err := json.Marshal(value)
 	if err != nil {
 		return err
 	}
 
-	file, err := createFile(e.RootDir, table.Name, "bin")
+	file, err := createFile(e.RootDir, name, "bin")
 	if err != nil {
 		return err
 	}

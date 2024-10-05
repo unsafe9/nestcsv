@@ -35,25 +35,21 @@ func main() {
 	}()
 
 	var (
-		tables []*nestcsv.Table
-		mu     sync.Mutex
+		tableDatas []*nestcsv.TableData
+		mu         sync.Mutex
 	)
 
 	var wg errgroup.Group
 	for tableData := range out {
 		wg.Go(func() error {
-			table, err := nestcsv.ParseTable(tableData)
-			if err != nil {
-				return err
-			}
 			for _, output := range config.Outputs {
-				if err := output.Encode(table); err != nil {
+				if err := output.Encode(tableData); err != nil {
 					return err
 				}
 			}
 
 			mu.Lock()
-			tables = append(tables, table)
+			tableDatas = append(tableDatas, tableData)
 			mu.Unlock()
 			return nil
 		})
@@ -62,14 +58,9 @@ func main() {
 		log.Fatalf("failed to save table: %v", err)
 	}
 
-	code, err := nestcsv.AnalyzeTableCode(tables)
-	if err != nil {
-		log.Fatalf("failed to analyze tables: %v", err)
-	}
-
 	for _, codegen := range config.Codegens {
 		wg.Go(func() error {
-			return codegen.Generate(code)
+			return codegen.Generate(tableDatas)
 		})
 	}
 	if err := wg.Wait(); err != nil {

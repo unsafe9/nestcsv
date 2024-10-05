@@ -10,7 +10,6 @@ import (
 )
 
 type TableMetadata struct {
-	DropID      bool              `query:"drop_id"`
 	AsMap       bool              `query:"as_map"`
 	SortAscBy   string            `query:"sort_asc_by"`
 	SortDescBy  string            `query:"sort_desc_by"`

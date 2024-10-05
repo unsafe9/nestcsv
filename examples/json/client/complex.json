@@ -1,0 +1,29 @@
+[
+  {
+    "SKU": [
+      {
+        "ID": "IAP_Google_1",
+        "Type": "Google"
+      }
+    ],
+    "Tags": [
+      "gold",
+      "package"
+    ]
+  },
+  {
+    "SKU": [
+      {
+        "ID": "IAP_Google_2",
+        "Type": "Google"
+      },
+      {
+        "ID": "IAP_Apple_2",
+        "Type": "Apple"
+      }
+    ],
+    "Tags": [
+      "dollar"
+    ]
+  }
+]

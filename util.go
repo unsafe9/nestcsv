@@ -16,16 +16,6 @@ import (
 	"text/template"
 )
 
-func mapWithoutKey[K comparable, V any](m map[K]V, key K) map[K]V {
-	clone := make(map[K]V)
-	for k, v := range m {
-		if k != key {
-			clone[k] = v
-		}
-	}
-	return clone
-}
-
 func findPtr[T any](arr []*T, f func(*T) bool) *T {
 	for _, v := range arr {
 		if f(v) {
@@ -33,19 +23,6 @@ func findPtr[T any](arr []*T, f func(*T) bool) *T {
 		}
 	}
 	return nil
-}
-
-func equalPtr(a, b any) bool {
-	return reflect.ValueOf(a).Pointer() == reflect.ValueOf(b).Pointer()
-}
-
-func removeOne[T any](arr []T, f func(T) bool) []T {
-	for i := range arr {
-		if f(arr[i]) {
-			return append(arr[:i], arr[i+1:]...)
-		}
-	}
-	return arr
 }
 
 func appendUnique[T comparable](arr []T, v ...T) []T {
@@ -181,22 +158,6 @@ func pascal(s string) string {
 		}
 	}
 	return strings.Join(tokens, "")
-}
-
-func reflectContainsAny(a, b any) bool {
-	av := reflect.ValueOf(a)
-	bv := reflect.ValueOf(b)
-	if av.Kind() != reflect.Slice || bv.Kind() != reflect.Slice {
-		panic("a or b is not slice")
-	}
-	for i := 0; i < av.Len(); i++ {
-		for j := 0; j < bv.Len(); j++ {
-			if av.Index(i).Interface() == bv.Index(j).Interface() {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 var pluralizeClient = pluralize.NewClient()

@@ -1,0 +1,53 @@
+[
+  {
+    "Float": 0.6,
+    "FloatArray": [
+      0.1,
+      0.2,
+      0.3
+    ],
+    "Int": 1,
+    "IntArray": [
+      1,
+      2,
+      3
+    ],
+    "Json": {
+      "hello": {
+        "world": [
+          1,
+          3,
+          5
+        ]
+      }
+    },
+    "Long": 9999999999,
+    "LongArray": [
+      9999999998,
+      9999999997
+    ],
+    "String": "hi!",
+    "StringArray": [
+      "asdf",
+      "zxcv"
+    ],
+    "Time": "2024-09-30T11:00:00Z",
+    "TimeArray": [
+      "2024-09-29T11:00:01Z",
+      "2024-08-30T11:00:02Z"
+    ]
+  },
+  {
+    "Float": 0,
+    "FloatArray": [],
+    "Int": 3,
+    "IntArray": [],
+    "Json": null,
+    "Long": 0,
+    "LongArray": [],
+    "String": "",
+    "StringArray": [],
+    "Time": "0001-01-01T00:00:00Z",
+    "TimeArray": []
+  }
+]

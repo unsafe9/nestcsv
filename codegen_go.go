@@ -29,7 +29,7 @@ func (c *CodegenGo) Generate(code *Code) error {
 			"PackageName": c.PackageName,
 			"File":        file,
 		}
-		if file.Table != nil {
+		if file.IsTable {
 			values["DataLoadPath"] = filepath.Join(c.DataLoadPath, file.Name+".json")
 		}
 		if err := c.template(file.Name+".go", "file.go.tpl", values); err != nil {

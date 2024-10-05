@@ -9,9 +9,10 @@ import (
 
 const (
 	TableMetadataRow  = 0
-	TableFieldNameRow = 1
-	TableFieldTypeRow = 2
-	TableDataStartRow = 4
+	TableFieldTagRow  = 1
+	TableFieldNameRow = 2
+	TableFieldTypeRow = 3
+	TableDataStartRow = 5
 
 	TableFieldIndexCol = 0
 )
@@ -22,6 +23,7 @@ type TableData struct {
 	Name       string
 	Metadata   *TableMetadata
 	Columns    int
+	FieldTags  [][]string
 	FieldNames []string
 	FieldTypes []string
 	DataRows   [][]string
@@ -40,6 +42,7 @@ func ParseTableData(name string, csvData [][]string) (*TableData, error) {
 	var (
 		columns     = len(csvData[TableFieldNameRow])
 		dropColumns = make([]int, 0)
+		fieldTags   = make([][]string, 0, columns)
 		fieldNames  = make([]string, 0, columns)
 		fieldTypes  = make([]string, 0, columns)
 	)
@@ -49,6 +52,11 @@ func ParseTableData(name string, csvData [][]string) (*TableData, error) {
 		if fieldName == "" || strings.HasPrefix(fieldName, "#") {
 			dropColumns = append(dropColumns, col)
 		} else {
+			tags := make([]string, 0)
+			if tagsCell := csvData[TableFieldTagRow][col]; tagsCell != "" {
+				tags = strings.Split(tagsCell, ",")
+			}
+			fieldTags = append(fieldTags, tags)
 			fieldNames = append(fieldNames, fieldName)
 			fieldTypes = append(fieldTypes, csvData[TableFieldTypeRow][col])
 		}
@@ -89,6 +97,7 @@ func ParseTableData(name string, csvData [][]string) (*TableData, error) {
 	table := &TableData{
 		Name:       tableName,
 		Columns:    columns,
+		FieldTags:  fieldTags,
 		FieldNames: fieldNames,
 		FieldTypes: fieldTypes,
 		DataRows:   dataRows,

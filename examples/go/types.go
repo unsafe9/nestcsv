@@ -31,7 +31,7 @@ func (t *TypesTable) SheetName() string {
 }
 
 func (t *TypesTable) Load() error {
-	file, err := os.Open("../json/types.json")
+	file, err := os.Open("../json/server/types.json")
 	if err != nil {
 		return err
 	}

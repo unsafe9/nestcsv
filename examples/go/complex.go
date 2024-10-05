@@ -14,7 +14,6 @@ type ComplexSKU struct {
 
 type Complex struct {
 	ID      int          `json:"ID"`
-	Tags    []string     `json:"Tags"`
 	SKU     []ComplexSKU `json:"SKU"`
 	Rewards []Reward     `json:"Rewards"`
 }
@@ -28,7 +27,7 @@ func (t *ComplexTable) SheetName() string {
 }
 
 func (t *ComplexTable) Load() error {
-	file, err := os.Open("../json/complex.json")
+	file, err := os.Open("../json/server/complex.json")
 	if err != nil {
 		return err
 	}

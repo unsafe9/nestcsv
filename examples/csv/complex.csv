@@ -1,4 +1,5 @@
 drop_id=false&as_map=false&sort_asc_by=ID&struct_type=Rewards:Reward,,,,,,,,
+server,client,"client,server","client,server",server,server,server,server,server
 ID,Tags,[]SKU.Type,[]SKU.ID,[]Rewards.Type,[]Rewards.ParamType,[]Rewards.ParamValue.Int,[]Rewards.ParamValue.Float,[]Rewards.ParamValue.Str
 int,[]string,string,string,string,string,int,float,string
 ,,,,,,,,

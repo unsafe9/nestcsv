@@ -4,7 +4,7 @@
 package {{ $.PackageName }}
 
 import (
-{{- if .Table }}
+{{- if .IsTable }}
     "encoding/json"
     "os"
 {{- end }}
@@ -21,7 +21,7 @@ type {{ pascal .Name }} struct {
 }
 {{ end }}
 
-{{ if .Table }}
+{{ if .IsTable }}
 type {{ pascal .Struct.Name }}Table struct{
     Rows []{{ pascal .Struct.Name }}
 }

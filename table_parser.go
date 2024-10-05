@@ -3,34 +3,33 @@ package nestcsv
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 )
 
-type tableParser struct {
-	tableData *TableData
+type TableParser struct {
+	td *TableData
 }
 
-func ParseTable(td *TableData) (*Table, error) {
-	p := &tableParser{
-		tableData: td,
-	}
-	return p.parse()
+func NewTableParser(td *TableData) *TableParser {
+	return &TableParser{td: td}
 }
 
-func (p *tableParser) parse() (*Table, error) {
+func (p *TableParser) ParseTableFields(tags []string) ([]*TableField, error) {
 	var (
-		td    = p.tableData
-		table = Table{
-			Name:     td.Name,
-			Metadata: td.Metadata,
-			Fields:   make([]*TableField, 0, td.Columns),
-			Values:   make([]map[string]any, 0, len(td.DataRows)),
-		}
+		td     = p.td
+		fields = make([]*TableField, 0, td.Columns)
 	)
 
 	for col := 0; col < td.Columns; col++ {
+		if !containsAny(tags, td.FieldTags[col]...) {
+			continue
+		}
+
 		var (
 			nameTokens             = strings.Split(td.FieldNames[col], ".")
 			tokenLen               = len(nameTokens)
@@ -48,7 +47,7 @@ func (p *tableParser) parse() (*Table, error) {
 			isMultiLineArray := strings.HasPrefix(field.Name, "[]")
 			if isMultiLineArray {
 				if multiLineArrayField != nil {
-					return nil, fmt.Errorf("nested multi-line array is not allowed: %s, %s", table.Name, field.Name)
+					return nil, fmt.Errorf("nested multi-line array is not allowed: %s, %s", td.Name, field.Name)
 				}
 				multiLineArrayField = field
 				field.Name = field.Name[len("[]"):]
@@ -74,19 +73,25 @@ func (p *tableParser) parse() (*Table, error) {
 				}
 				parentField = field
 			} else {
-				parentField = findPtr(table.Fields, func(f *TableField) bool {
+				parentField = findPtr(fields, func(f *TableField) bool {
 					return f.Name == field.Name
 				})
 				if parentField == nil {
 					parentField = field
-					table.Fields = append(table.Fields, field)
+					fields = append(fields, field)
 				}
 			}
 		}
 	}
+	return fields, nil
+}
 
+func (p *TableParser) Marshal(fields []*TableField) (any, error) {
 	var (
-		rowMap                 = make(map[string]map[string]any)
+		td        = p.td
+		rowMap    = make(map[string]map[string]any)
+		rowIdxMap = make(map[string]int)
+
 		multiLineArrayRowCount = make(map[string]int)
 	)
 
@@ -96,10 +101,10 @@ func (p *tableParser) parse() (*Table, error) {
 		if !isMultiLineRow {
 			rowContainer = make(map[string]any)
 			rowMap[id] = rowContainer
-			table.Values = append(table.Values, rowContainer)
+			rowIdxMap[id] = rowIdx
 		}
 
-		for _, topField := range table.Fields {
+		for _, topField := range fields {
 			container := rowContainer
 			for field := range topField.Iterate() {
 				var multiLineArrayIdx int
@@ -153,7 +158,7 @@ func (p *tableParser) parse() (*Table, error) {
 						for _, elem := range cells {
 							v, err := p.parseGoValue(field.Type, elem)
 							if err != nil {
-								return nil, fmt.Errorf("failed to parse array value: %s, %s, %d, %s, %w", table.Name, field.Name, rowIdx, cell, err)
+								return nil, fmt.Errorf("failed to parse array value: %s, %s, %d, %s, %w", td.Name, field.Name, rowIdx, cell, err)
 							}
 							arr = append(arr, v)
 						}
@@ -167,7 +172,7 @@ func (p *tableParser) parse() (*Table, error) {
 					cell := row[field.column]
 					v, err := p.parseGoValue(field.Type, cell)
 					if err != nil {
-						return nil, fmt.Errorf("failed to parse value: %s, %s, %d, %s, %w", table.Name, field.Name, rowIdx, cell, err)
+						return nil, fmt.Errorf("failed to parse value: %s, %s, %d, %s, %w", td.Name, field.Name, rowIdx, cell, err)
 					}
 					container[field.Name] = v
 				}
@@ -175,10 +180,30 @@ func (p *tableParser) parse() (*Table, error) {
 		}
 	}
 
-	return &table, nil
+	if td.Metadata.AsMap {
+		m := make(map[string]any)
+		for id, row := range rowMap {
+			m[id] = row
+		}
+		return m, nil
+
+	} else {
+		rows := make([]map[string]any, 0, len(rowMap))
+		rowIndices := make([]int, 0, len(rowMap))
+		for id, row := range rowMap {
+			rows = append(rows, row)
+			rowIndices = append(rowIndices, rowIdxMap[id])
+		}
+		if td.Metadata.SortAscBy != "" {
+			p.sortValues(rows, rowIndices, td.Metadata.SortAscBy, false)
+		} else if td.Metadata.SortDescBy != "" {
+			p.sortValues(rows, rowIndices, td.Metadata.SortDescBy, true)
+		}
+		return rows, nil
+	}
 }
 
-func (p *tableParser) parseGoValue(typ FieldType, cell string) (any, error) {
+func (p *TableParser) parseGoValue(typ FieldType, cell string) (any, error) {
 	switch typ {
 	case FieldTypeInt:
 		if cell == "" {
@@ -221,11 +246,44 @@ func (p *tableParser) parseGoValue(typ FieldType, cell string) (any, error) {
 	}
 }
 
-func (p *tableParser) checkAllCellsEmpty(field *TableField, row []string) bool {
+func (p *TableParser) checkAllCellsEmpty(field *TableField, row []string) bool {
 	for f := range field.Iterate() {
 		if row[f.column] != "" {
 			return false
 		}
 	}
 	return true
+}
+
+func (p *TableParser) sortValues(values []map[string]any, rowIndices []int, field string, desc bool) {
+	fieldCol := slices.Index(p.td.FieldNames, field)
+	fieldType, _ := newFieldType(p.td.FieldTypes[fieldCol])
+	sort.SliceStable(values, func(i, j int) bool {
+		av, _ := p.parseGoValue(fieldType, p.td.DataRows[rowIndices[i]][fieldCol])
+		bv, _ := p.parseGoValue(fieldType, p.td.DataRows[rowIndices[j]][fieldCol])
+		compareAsc := p.sortCompareAsc(av, bv)
+		if desc {
+			return !compareAsc
+		} else {
+			return compareAsc
+		}
+	})
+}
+
+func (p *TableParser) sortCompareAsc(a, b any) bool {
+	switch a.(type) {
+	case int:
+		return a.(int) < b.(int)
+	case int64:
+		return a.(int64) < b.(int64)
+	case string:
+		return strings.Compare(a.(string), b.(string)) < 0
+	case float64:
+		return a.(float64) < b.(float64)
+	case time.Time:
+		return a.(time.Time).Before(b.(time.Time))
+	default:
+		log.Panicf("unsupported type: %T", a)
+		return false
+	}
 }
