@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"iter"
-	"slices"
 	"sort"
 	"strings"
 )
@@ -101,9 +100,7 @@ func (a *codeAnalyzer) buildStruct(file *CodeFile, table *Table, name string, fi
 			StructRef: nil,
 		}
 		codeStruct.Fields = append(codeStruct.Fields, codeField)
-		if !slices.Contains(file.FieldTypes, field.Type) {
-			file.FieldTypes = append(file.FieldTypes, field.Type)
-		}
+		file.FieldTypes = appendUnique(file.FieldTypes, field.Type)
 
 		if field.Type == FieldTypeStruct {
 			id := field.Identifier()
@@ -112,9 +109,7 @@ func (a *codeAnalyzer) buildStruct(file *CodeFile, table *Table, name string, fi
 				if err != nil {
 					return nil, err
 				}
-				if !slices.Contains(file.FileRefs, refFile) {
-					file.FileRefs = append(file.FileRefs, refFile)
-				}
+				file.FileRefs = appendUnique(file.FileRefs, refFile)
 				codeField.StructRef = refFile.Struct
 
 			} else {
@@ -161,17 +156,14 @@ func (a *codeAnalyzer) getOrAddNamedStructFile(table *Table, name string, field 
 		return a.namedStructFiles[name], nil
 	}
 
-	file := &CodeFile{
-		Name: name,
-	}
 	for _, f := range field.StructFields {
 		f.ParentField = nil
 	}
-	fileStruct, err := a.buildStruct(file, table, name, field.StructFields)
+
+	file, err := a.buildFile(table, name, field.StructFields)
 	if err != nil {
 		return nil, err
 	}
-	file.Struct = fileStruct
 
 	a.namedStructFileFields[name] = field
 	a.namedStructFiles[name] = file
@@ -179,21 +171,26 @@ func (a *codeAnalyzer) getOrAddNamedStructFile(table *Table, name string, field 
 }
 
 func (a *codeAnalyzer) addTableFile(table *Table) (*CodeFile, error) {
-	if _, ok := a.tableFiles[table.Name]; ok {
-		panic("table file already exists")
+	file, err := a.buildFile(table, table.Name, table.Fields)
+	if err != nil {
+		return nil, err
 	}
 
+	a.tableFiles[table.Name] = file
+	return file, nil
+}
+
+func (a *codeAnalyzer) buildFile(table *Table, name string, fields []*TableField) (*CodeFile, error) {
 	file := &CodeFile{
 		Table: table,
-		Name:  table.Name,
+		Name:  name,
 	}
-	fileStruct, err := a.buildStruct(file, table, table.Name, table.Fields)
+	fileStruct, err := a.buildStruct(file, table, name, fields)
 	if err != nil {
 		return nil, err
 	}
 	file.Struct = fileStruct
 
-	a.tableFiles[table.Name] = file
 	return file, nil
 }
 

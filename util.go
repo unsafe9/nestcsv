@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"text/template"
 )
@@ -54,6 +55,24 @@ func removeOne[T any](arr []T, f func(T) bool) []T {
 		}
 	}
 	return arr
+}
+
+func appendUnique[T comparable](arr []T, v ...T) []T {
+	for _, vv := range v {
+		if !slices.Contains(arr, vv) {
+			arr = append(arr, vv)
+		}
+	}
+	return arr
+}
+
+func containsAny[T comparable](arr []T, v ...T) bool {
+	for _, vv := range v {
+		if slices.Contains(arr, vv) {
+			return true
+		}
+	}
+	return false
 }
 
 func glob(patterns []string) iter.Seq[string] {
@@ -143,11 +162,19 @@ func has(arr any, v any) bool {
 	if arrValue.Kind() != reflect.Slice {
 		panic("arr is not slice")
 	}
-	value := reflect.ValueOf(v).Convert(arrValue.Type().Elem())
-
-	for i := 0; i < arrValue.Len(); i++ {
-		if arrValue.Index(i).Interface() == value.Interface() {
-			return true
+	value := reflect.ValueOf(v)
+	if value.Kind() == reflect.Slice {
+		for i := 0; i < value.Len(); i++ {
+			if has(arr, value.Index(i).Interface()) {
+				return true
+			}
+		}
+	} else {
+		value = value.Convert(arrValue.Type().Elem())
+		for i := 0; i < arrValue.Len(); i++ {
+			if arrValue.Index(i).Interface() == value.Interface() {
+				return true
+			}
 		}
 	}
 	return false
@@ -163,6 +190,22 @@ func pascal(s string) string {
 		}
 	}
 	return strings.Join(tokens, "")
+}
+
+func reflectContainsAny(a, b any) bool {
+	av := reflect.ValueOf(a)
+	bv := reflect.ValueOf(b)
+	if av.Kind() != reflect.Slice || bv.Kind() != reflect.Slice {
+		panic("a or b is not slice")
+	}
+	for i := 0; i < av.Len(); i++ {
+		for j := 0; j < bv.Len(); j++ {
+			if av.Index(i).Interface() == bv.Index(j).Interface() {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 var pluralizeClient = pluralize.NewClient()
