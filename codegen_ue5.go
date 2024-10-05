@@ -20,6 +20,10 @@ func (c *CodegenUE5) Generate(code *Code) error {
 	if err := c.template("TableBase.h", "TableBase.h.tpl", values); err != nil {
 		return err
 	}
+	values["Tables"] = code.Tables
+	if err := c.template("TableHolder.hpp", "TableHolder.hpp.tpl", values); err != nil {
+		return err
+	}
 
 	for file := range code.Files() {
 		values := map[string]any{
