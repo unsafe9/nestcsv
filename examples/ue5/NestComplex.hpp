@@ -11,7 +11,7 @@ struct FNestComplexSKU : public FNestTableDataBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FString ID;
 
-    void Load(const TSharedPtr<FJsonObject>& JsonObject) override
+    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) override
     {
         JsonObject.ToSharedRef()->TryGetStringField(TEXT("Type"), Type);
         JsonObject.ToSharedRef()->TryGetStringField(TEXT("ID"), ID);
@@ -27,7 +27,7 @@ struct FNestComplex : public FNestTableDataBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TArray<FNestComplexSKU> SKU;
 
-    void Load(const TSharedPtr<FJsonObject>& JsonObject) override
+    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) override
     {
         const TArray<TSharedPtr<FJsonValue>>* TagsArray = nullptr;
         if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("Tags"), TagsArray))
@@ -46,11 +46,11 @@ struct FNestComplex : public FNestTableDataBase
         {
             for (const auto& Item : *SKUArray)
             {
-                const TSharedPtr<FJsonObject> *JsonObject;
-                if (Item->TryGetObject(JsonObject))
+                const TSharedPtr<FJsonObject> *ObjPtr = nullptr;
+                if (Item->TryGetObject(ObjPtr))
                 {
                     FNestComplexSKU FieldItem;
-                    ObjItem.Load(JsonObject);
+                    FieldItem.Load(*ObjPtr);
                     SKU.Add(FieldItem);
                 }
             }

@@ -16,7 +16,7 @@ struct F{{ $.Prefix }}{{ pascal .Name }} : public F{{ $.Prefix }}TableDataBase
     {{ fieldType . }} {{ .Name }};
     {{- end }}
 
-    void Load(const TSharedPtr<FJsonObject>& JsonObject) override
+    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) override
     {
         {{- range .Fields }}
         {{- if .IsArray }}
@@ -38,11 +38,11 @@ struct F{{ $.Prefix }}{{ pascal .Name }} : public F{{ $.Prefix }}TableDataBase
                 {{- else if eq .Type "json" }}
                 {{ .Name }}.Add(Item);
                 {{- else if eq .Type "struct" }}
-                const TSharedPtr<FJsonObject> *JsonObject;
-                if (Item->TryGetObject(JsonObject))
+                const TSharedPtr<FJsonObject> *ObjPtr = nullptr;
+                if (Item->TryGetObject(ObjPtr))
                 {
                     {{ fieldElemType . }} FieldItem;
-                    ObjItem.Load(JsonObject);
+                    FieldItem.Load(*ObjPtr);
                     {{ .Name }}.Add(FieldItem);
                 }
                 {{- else }}
@@ -83,7 +83,7 @@ struct F{{ $.Prefix }}{{ pascal .Name }} : public F{{ $.Prefix }}TableDataBase
         {{- else if eq .Type "json" }}
         JsonObject.ToSharedRef()->TryGetField(TEXT("{{ .Name }}"), {{ .Name }});
         {{- else if eq .Type "struct" }}
-        const TSharedPtr<FJsonObject> *{{ .Name }}ObjPtr;
+        const TSharedPtr<FJsonObject> *{{ .Name }}ObjPtr = nullptr;
         if (JsonObject.ToSharedRef()->TryGetObjectField(TEXT("{{ .Name }}"), {{ .Name }}ObjPtr))
         {
             {{ .Name }}.Load(*{{ .Name }}ObjPtr);

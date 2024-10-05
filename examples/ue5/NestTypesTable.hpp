@@ -11,16 +11,20 @@ struct FNestTypesTable : public FNestTableBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TMap<FString, FNestTypes> Rows;
 
-    void Load(const TSharedPtr<FJsonValue>& JsonValue) override
+    virtual void Load(const TSharedPtr<FJsonValue>& JsonValue) override
     {
-        const TSharedPtr<FJsonObject>* RowsMap;
+        const TSharedPtr<FJsonObject>* RowsMap = nullptr;
         if (JsonValue->TryGetObject(RowsMap))
         {
             for (const auto& Row : (*RowsMap)->Values)
             {
-                FNestTypes RowItem;
-                RowItem.Load(Row.Value);
-                Rows.Add(Row.Key, RowItem);
+                const TSharedPtr<FJsonObject> *RowValue = nullptr;
+                if (Row.Value->TryGetObject(RowValue))
+                {
+                    FNestTypes RowItem;
+                    RowItem.Load(*RowValue);
+                    Rows.Add(Row.Key, RowItem);
+                }
             }
         }
     }

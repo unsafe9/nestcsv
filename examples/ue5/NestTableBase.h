@@ -8,5 +8,8 @@ struct FNestTableBase
 {
     GENERATED_BODY()
 
-    virtual void Load(const TSharedPtr<FJsonValue>& JsonValue) = 0;
+    FNestTableBase() {}
+    virtual ~FNestTableBase() {}
+
+    virtual void Load(const TSharedPtr<FJsonValue>& JsonValue);
 };

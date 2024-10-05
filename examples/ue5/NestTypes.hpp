@@ -29,7 +29,7 @@ struct FNestTypes : public FNestTableDataBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TArray<FDateTime> TimeArray;
 
-    void Load(const TSharedPtr<FJsonObject>& JsonObject) override
+    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) override
     {
         JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Int"), Int);
         JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Long"), Long);

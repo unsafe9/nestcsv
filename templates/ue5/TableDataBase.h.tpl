@@ -8,5 +8,8 @@ struct F{{ .Prefix }}TableDataBase
 {
     GENERATED_BODY()
 
-    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) = 0;
+    F{{ .Prefix }}TableDataBase() {}
+    virtual ~F{{ .Prefix }}TableDataBase() {}
+
+    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject);
 };

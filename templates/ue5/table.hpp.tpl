@@ -16,28 +16,36 @@ struct F{{ $.Prefix }}{{ pascal .Name }}Table : public F{{ $.Prefix }}TableBase
     TArray<F{{ $.Prefix }}{{ pascal .Name }}> Rows;
     {{- end }}
 
-    void Load(const TSharedPtr<FJsonValue>& JsonValue) override
+    virtual void Load(const TSharedPtr<FJsonValue>& JsonValue) override
     {
         {{- if .IsMap }}
-        const TSharedPtr<FJsonObject>* RowsMap;
+        const TSharedPtr<FJsonObject>* RowsMap = nullptr;
         if (JsonValue->TryGetObject(RowsMap))
         {
             for (const auto& Row : (*RowsMap)->Values)
             {
-                F{{ $.Prefix }}{{ pascal .Name }} RowItem;
-                RowItem.Load(Row.Value);
-                Rows.Add(Row.Key, RowItem);
+                const TSharedPtr<FJsonObject> *RowValue = nullptr;
+                if (Row.Value->TryGetObject(RowValue))
+                {
+                    F{{ $.Prefix }}{{ pascal .Name }} RowItem;
+                    RowItem.Load(*RowValue);
+                    Rows.Add(Row.Key, RowItem);
+                }
             }
         }
         {{- else }}
-        const TArray<TSharedPtr<FJsonValue>>* RowsArray;
+        const TArray<TSharedPtr<FJsonValue>>* RowsArray = nullptr;
         if (JsonValue->TryGetArray(RowsArray))
         {
             for (const auto& Row : *RowsArray)
             {
-                F{{ $.Prefix }}{{ pascal .Name }} RowItem;
-                RowItem.Load(Row);
-                Rows.Add(RowItem);
+                const TSharedPtr<FJsonObject> *RowValue = nullptr;
+                if (Row.Value->TryGetObject(RowValue))
+                {
+                    F{{ $.Prefix }}{{ pascal .Name }} RowItem;
+                    RowItem.Load(*RowValue);
+                    Rows.Add(RowItem);
+                }
             }
         }
         {{- end }}

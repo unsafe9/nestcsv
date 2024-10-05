@@ -11,16 +11,20 @@ struct FNestComplexTable : public FNestTableBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     TArray<FNestComplex> Rows;
 
-    void Load(const TSharedPtr<FJsonValue>& JsonValue) override
+    virtual void Load(const TSharedPtr<FJsonValue>& JsonValue) override
     {
-        const TArray<TSharedPtr<FJsonValue>>* RowsArray;
+        const TArray<TSharedPtr<FJsonValue>>* RowsArray = nullptr;
         if (JsonValue->TryGetArray(RowsArray))
         {
             for (const auto& Row : *RowsArray)
             {
-                FNestComplex RowItem;
-                RowItem.Load(Row);
-                Rows.Add(RowItem);
+                const TSharedPtr<FJsonObject> *RowValue = nullptr;
+                if (Row.Value->TryGetObject(RowValue))
+                {
+                    FNestComplex RowItem;
+                    RowItem.Load(*RowValue);
+                    Rows.Add(RowItem);
+                }
             }
         }
     }
