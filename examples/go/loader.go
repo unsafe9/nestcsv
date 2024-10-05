@@ -17,3 +17,14 @@ func LoadTables() (*Tables, error) {
 	}
 	return &t, nil
 }
+
+func (t *Tables) GetBySheetName(sheetName string) TableBase {
+	switch sheetName {
+	case "complex":
+		return &t.Complex
+	case "types":
+		return &t.Types
+	default:
+		return nil
+	}
+}

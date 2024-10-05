@@ -3,6 +3,8 @@
 package table
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"os"
 )
@@ -19,7 +21,9 @@ type Complex struct {
 }
 
 type ComplexTable struct {
-	Rows []Complex
+	Rows     []Complex
+	rawData  []byte
+	checksum string
 }
 
 func (t *ComplexTable) SheetName() string {
@@ -33,5 +37,17 @@ func (t *ComplexTable) Load() error {
 	}
 	defer file.Close()
 
-	return json.NewDecoder(file).Decode(&t.Rows)
+	if err := json.NewDecoder(file).Decode(&t.Rows); err != nil {
+		return err
+	}
+	t.rawData, err = json.Marshal(t.Rows)
+	if err != nil {
+		return err
+	}
+	checksum := md5.Sum(t.Data)
+	t.checksum = hex.EncodeToString(checksum[:])
+	return nil
+}
+func (t *ComplexTable) RawData() ([]byte, string) {
+	return t.rawData, t.checksum
 }

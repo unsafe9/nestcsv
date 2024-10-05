@@ -17,6 +17,7 @@ type CodegenGo struct {
 	PackageName  string `yaml:"package_name"`
 	Loader       bool   `yaml:"loader"`
 	DataLoadPath string `yaml:"data_load_path"`
+	CacheJSON    bool   `yaml:"cache_json"`
 }
 
 func (c *CodegenGo) Generate(code *Code) error {
@@ -24,9 +25,18 @@ func (c *CodegenGo) Generate(code *Code) error {
 		c.PackageName = filepath.Base(c.RootDir)
 	}
 
+	values := map[string]any{
+		"PackageName": c.PackageName,
+		"CacheJSON":   c.CacheJSON,
+	}
+	if err := c.template("table_base.go", "table_base.go.tpl", values); err != nil {
+		return err
+	}
+
 	for file := range code.Files() {
 		values := map[string]any{
 			"PackageName": c.PackageName,
+			"CacheJSON":   c.CacheJSON,
 			"File":        file,
 		}
 		if file.IsTable {

@@ -17,3 +17,14 @@ func LoadTables() (*Tables, error) {
 {{- end }}
     return &t, nil
 }
+
+func (t *Tables) GetBySheetName(sheetName string) TableBase {
+    switch sheetName {
+{{- range .Tables }}
+    case "{{ .Name }}":
+        return &t.{{ pascal .Struct.Name }}
+{{- end }}
+    default:
+        return nil
+    }
+}
