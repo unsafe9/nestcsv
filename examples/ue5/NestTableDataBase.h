@@ -13,5 +13,5 @@ struct FNestTableDataBase
     FNestTableDataBase() {}
     virtual ~FNestTableDataBase() {}
 
-    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject);
+    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) {}
 };

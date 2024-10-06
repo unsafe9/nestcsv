@@ -13,6 +13,6 @@ struct FNestTableBase
     FNestTableBase() {}
     virtual ~FNestTableBase() {}
 
-    virtual FString GetSheetName() const;
-    virtual void Load(const TSharedPtr<FJsonValue>& JsonValue);
+    virtual FString GetSheetName() const { return TEXT(""); }
+    virtual void Load(const TSharedPtr<FJsonValue>& JsonValue) {}
 };

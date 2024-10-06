@@ -13,6 +13,6 @@ struct F{{ .Prefix }}TableBase
     F{{ .Prefix }}TableBase() {}
     virtual ~F{{ .Prefix }}TableBase() {}
 
-    virtual FString GetSheetName() const;
-    virtual void Load(const TSharedPtr<FJsonValue>& JsonValue);
+    virtual FString GetSheetName() const { return TEXT(""); }
+    virtual void Load(const TSharedPtr<FJsonValue>& JsonValue) {}
 };

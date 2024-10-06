@@ -13,5 +13,5 @@ struct F{{ .Prefix }}TableDataBase
     F{{ .Prefix }}TableDataBase() {}
     virtual ~F{{ .Prefix }}TableDataBase() {}
 
-    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject);
+    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) {}
 };
