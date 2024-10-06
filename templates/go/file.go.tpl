@@ -5,6 +5,7 @@ package {{ $.PackageName }}
 
 import (
 {{- if .IsTable }}
+    "path/filepath"
     "encoding/json"
     "os"
 {{- end }}
@@ -38,8 +39,16 @@ func (t *{{ pascal .Struct.Name }}Table) GetRows() interface{} {
     return t.Rows
 }
 
-func (t *{{ pascal .Struct.Name }}Table) Load() error {
-    file, err := os.Open("{{ $.DataLoadPath }}")
+func (t *{{ pascal .Struct.Name }}Table) Load(data []byte) error {
+    return json.Unmarshal(data, &t.Rows)
+}
+
+func (t *{{ pascal .Struct.Name }}Table) LoadFromString(jsonString string) error {
+    return t.Load([]byte(jsonString))
+}
+   
+func (t *{{ pascal .Struct.Name }}Table) LoadFromFile(basePath string) error {
+    file, err := os.Open(filepath.Join(basePath, "{{ .Name }}.json"))
     if err != nil {
         return err
     }

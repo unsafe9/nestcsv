@@ -7,12 +7,12 @@ type Tables struct {
 	Types   TypesTable
 }
 
-func LoadTables() (*Tables, error) {
+func LoadTablesFromFile(basePath string) (*Tables, error) {
 	var t Tables
-	if err := t.Complex.Load(); err != nil {
+	if err := t.Complex.LoadFromFile(basePath); err != nil {
 		return nil, err
 	}
-	if err := t.Types.Load(); err != nil {
+	if err := t.Types.LoadFromFile(basePath); err != nil {
 		return nil, err
 	}
 	return &t, nil

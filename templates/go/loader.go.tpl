@@ -8,10 +8,10 @@ type Tables struct{
 {{- end }}
 }
 
-func LoadTables() (*Tables, error) {
+func LoadTablesFromFile(basePath string) (*Tables, error) {
     var t Tables
 {{- range .Tables }}
-    if err := t.{{ pascal .Struct.Name }}.Load(); err != nil {
+    if err := t.{{ pascal .Struct.Name }}.LoadFromFile(basePath); err != nil {
         return nil, err
     }
 {{- end }}

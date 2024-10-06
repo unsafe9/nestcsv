@@ -39,8 +39,6 @@ codegens:
     go:
       root_dir: ./go
       package_name: table
-      loader: true
-      data_load_path: ../json
   - tags: [client]
     ue5:
       root_dir: ./ue5

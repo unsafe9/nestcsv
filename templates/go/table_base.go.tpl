@@ -5,6 +5,8 @@ package {{ .PackageName }}
 type TableBase interface {
     SheetName() string
     GetRows() interface{}
-    Load() error
+    Load(data []byte) error
+    LoadFromString(jsonString string) error
+    LoadFromFile(basePath string) error
 }
 

@@ -5,6 +5,7 @@ package table
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 )
 
 type ComplexSKU struct {
@@ -30,8 +31,16 @@ func (t *ComplexTable) GetRows() interface{} {
 	return t.Rows
 }
 
-func (t *ComplexTable) Load() error {
-	file, err := os.Open("../json/server/complex.json")
+func (t *ComplexTable) Load(data []byte) error {
+	return json.Unmarshal(data, &t.Rows)
+}
+
+func (t *ComplexTable) LoadFromString(jsonString string) error {
+	return t.Load([]byte(jsonString))
+}
+
+func (t *ComplexTable) LoadFromFile(basePath string) error {
+	file, err := os.Open(filepath.Join(basePath, "complex.json"))
 	if err != nil {
 		return err
 	}

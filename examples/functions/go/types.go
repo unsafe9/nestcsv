@@ -5,6 +5,7 @@ package table
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -34,8 +35,16 @@ func (t *TypesTable) GetRows() interface{} {
 	return t.Rows
 }
 
-func (t *TypesTable) Load() error {
-	file, err := os.Open("../json/server/types.json")
+func (t *TypesTable) Load(data []byte) error {
+	return json.Unmarshal(data, &t.Rows)
+}
+
+func (t *TypesTable) LoadFromString(jsonString string) error {
+	return t.Load([]byte(jsonString))
+}
+
+func (t *TypesTable) LoadFromFile(basePath string) error {
+	file, err := os.Open(filepath.Join(basePath, "types.json"))
 	if err != nil {
 		return err
 	}
