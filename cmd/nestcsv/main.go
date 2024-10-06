@@ -64,12 +64,14 @@ func main() {
 		log.Fatalf("failed to save table: %v", err)
 	}
 
-	for _, codegen := range config.Codegens {
-		wg.Go(func() error {
-			return codegen.Generate(tableDatas)
-		})
-	}
-	if err := wg.Wait(); err != nil {
-		log.Fatalf("failed to generate code: %v", err)
+	if len(tableDatas) > 0 {
+		for _, codegen := range config.Codegens {
+			wg.Go(func() error {
+				return codegen.Generate(tableDatas)
+			})
+		}
+		if err := wg.Wait(); err != nil {
+			log.Fatalf("failed to generate code: %v", err)
+		}
 	}
 }
