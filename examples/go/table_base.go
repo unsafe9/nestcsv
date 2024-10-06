@@ -5,5 +5,4 @@ package table
 type TableBase interface {
 	SheetName() string
 	Load() error
-	RawData() ([]byte, string)
 }

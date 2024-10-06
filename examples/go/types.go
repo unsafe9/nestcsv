@@ -3,8 +3,6 @@
 package table
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"os"
 	"time"
@@ -25,9 +23,7 @@ type Types struct {
 }
 
 type TypesTable struct {
-	Rows     map[string]Types
-	rawData  []byte
-	checksum string
+	Rows map[string]Types
 }
 
 func (t *TypesTable) SheetName() string {
@@ -41,17 +37,5 @@ func (t *TypesTable) Load() error {
 	}
 	defer file.Close()
 
-	if err := json.NewDecoder(file).Decode(&t.Rows); err != nil {
-		return err
-	}
-	t.rawData, err = json.Marshal(t.Rows)
-	if err != nil {
-		return err
-	}
-	checksum := md5.Sum(t.rawData)
-	t.checksum = hex.EncodeToString(checksum[:])
-	return nil
-}
-func (t *TypesTable) RawData() ([]byte, string) {
-	return t.rawData, t.checksum
+	return json.NewDecoder(file).Decode(&t.Rows)
 }

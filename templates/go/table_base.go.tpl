@@ -5,8 +5,5 @@ package {{ .PackageName }}
 type TableBase interface {
     SheetName() string
     Load() error
-    {{- if $.CacheJSON }}
-    RawData() ([]byte, string)
-    {{- end }}
 }
 

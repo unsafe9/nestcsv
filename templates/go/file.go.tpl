@@ -7,10 +7,6 @@ import (
 {{- if .IsTable }}
     "encoding/json"
     "os"
-{{- if $.CacheJSON }}
-    "crypto/md5"
-    "encoding/hex"
-{{- end }}
 {{- end }}
 {{- if has .FieldTypes "time" }}
     "time"
@@ -32,10 +28,6 @@ type {{ pascal .Struct.Name }}Table struct{
     {{- else }}
     Rows []{{ pascal .Struct.Name }}
     {{- end }}
-    {{- if $.CacheJSON }}
-    rawData []byte
-    checksum string
-    {{- end }}
 }
 
 func (t *{{ pascal .Struct.Name }}Table) SheetName() string {
@@ -49,26 +41,7 @@ func (t *{{ pascal .Struct.Name }}Table) Load() error {
     }
     defer file.Close()
 
-    if err := json.NewDecoder(file).Decode(&t.Rows); err != nil {
-        return err
-    }
-    
-    {{- if $.CacheJSON }}
-    t.rawData, err = json.Marshal(t.Rows)
-    if err != nil {
-        return err
-    }
-    checksum := md5.Sum(t.rawData)
-    t.checksum = hex.EncodeToString(checksum[:])
-
-    {{- end }}
-    return nil
+    return json.NewDecoder(file).Decode(&t.Rows)
 }
-    
-{{- if $.CacheJSON }}
-func (t *{{ pascal .Struct.Name }}Table) RawData() ([]byte, string) {
-    return t.rawData, t.checksum
-}
-{{- end }}
 {{- end }}
 {{- end -}}

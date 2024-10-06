@@ -21,7 +21,6 @@ codegens:
       package_name: table
       loader: true
       data_load_path: ../json/server
-      cache_json: true
   - tags: [all, client]
     ue5:
       root_dir: ./ue5
