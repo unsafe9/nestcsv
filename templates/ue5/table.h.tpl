@@ -4,14 +4,15 @@
 #pragma once
 
 #include "{{ $.Prefix }}TableBase.h"
-#include "{{ $.Prefix }}{{ pascal .Name }}.hpp"
+#include "{{ $.Prefix }}{{ pascal .Name }}.h"
+#include "{{ $.Prefix }}{{ pascal .Name }}Table.generated.h"
 
 USTRUCT(BlueprintType)
 struct F{{ $.Prefix }}{{ pascal .Name }}Table : public F{{ $.Prefix }}TableBase
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     {{- if .IsMap }}
     TMap<FString, F{{ $.Prefix }}{{ pascal .Name }}> Rows;
     {{- else }}
@@ -47,7 +48,7 @@ struct F{{ $.Prefix }}{{ pascal .Name }}Table : public F{{ $.Prefix }}TableBase
             for (const auto& Row : *RowsArray)
             {
                 const TSharedPtr<FJsonObject> *RowValue = nullptr;
-                if (Row.Value->TryGetObject(RowValue))
+                if (Row->TryGetObject(RowValue))
                 {
                     F{{ $.Prefix }}{{ pascal .Name }} RowItem;
                     RowItem.Load(*RowValue);

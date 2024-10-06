@@ -3,32 +3,33 @@
 #pragma once
 
 #include "NestTableDataBase.h"
+#include "NestTypes.generated.h"
 
 USTRUCT(BlueprintType)
 struct FNestTypes : public FNestTableDataBase
 {
     GENERATED_BODY()
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     int32 Int;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     int64 Long;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     double Float;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     FString String;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     FDateTime Time;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TSharedPtr<FJsonValue> Json;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TArray<int32> IntArray;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TArray<int64> LongArray;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TArray<double> FloatArray;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TArray<FString> StringArray;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TArray<FDateTime> TimeArray;
 
     virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) override

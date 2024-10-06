@@ -3,14 +3,15 @@
 #pragma once
 
 #include "NestTableBase.h"
-#include "NestTypes.hpp"
+#include "NestTypes.h"
+#include "NestTypesTable.generated.h"
 
 USTRUCT(BlueprintType)
 struct FNestTypesTable : public FNestTableBase
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TMap<FString, FNestTypes> Rows;
     
     virtual FString GetSheetName() const override

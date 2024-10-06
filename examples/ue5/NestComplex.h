@@ -3,14 +3,15 @@
 #pragma once
 
 #include "NestTableDataBase.h"
+#include "NestComplex.generated.h"
 
 USTRUCT(BlueprintType)
 struct FNestComplexSKU : public FNestTableDataBase
 {
     GENERATED_BODY()
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     FString Type;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     FString ID;
 
     virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) override
@@ -24,9 +25,9 @@ USTRUCT(BlueprintType)
 struct FNestComplex : public FNestTableDataBase
 {
     GENERATED_BODY()
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TArray<FString> Tags;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TArray<FNestComplexSKU> SKU;
 
     virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) override

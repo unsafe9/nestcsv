@@ -21,7 +21,7 @@ func (c *CodegenUE5) Generate(code *Code) error {
 		return err
 	}
 	values["Tables"] = code.Tables
-	if err := c.template("TableHolder.hpp", "TableHolder.hpp.tpl", values); err != nil {
+	if err := c.template("TableHolder.h", "TableHolder.h.tpl", values); err != nil {
 		return err
 	}
 
@@ -30,12 +30,12 @@ func (c *CodegenUE5) Generate(code *Code) error {
 			"File":   file,
 			"Prefix": c.Prefix,
 		}
-		if err := c.template(pascal(file.Name)+".hpp", "file.hpp.tpl", values); err != nil {
+		if err := c.template(pascal(file.Name)+".h", "file.h.tpl", values); err != nil {
 			return err
 		}
 
 		if file.IsTable {
-			if err := c.template(pascal(file.Name)+"Table.hpp", "table.hpp.tpl", values); err != nil {
+			if err := c.template(pascal(file.Name)+"Table.h", "table.h.tpl", values); err != nil {
 				return err
 			}
 		}

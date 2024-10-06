@@ -3,14 +3,15 @@
 #pragma once
 
 #include "NestTableBase.h"
-#include "NestComplex.hpp"
+#include "NestComplex.h"
+#include "NestComplexTable.generated.h"
 
 USTRUCT(BlueprintType)
 struct FNestComplexTable : public FNestTableBase
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TArray<FNestComplex> Rows;
     
     virtual FString GetSheetName() const override
@@ -26,7 +27,7 @@ struct FNestComplexTable : public FNestTableBase
             for (const auto& Row : *RowsArray)
             {
                 const TSharedPtr<FJsonObject> *RowValue = nullptr;
-                if (Row.Value->TryGetObject(RowValue))
+                if (Row->TryGetObject(RowValue))
                 {
                     FNestComplex RowItem;
                     RowItem.Load(*RowValue);

@@ -5,8 +5,9 @@
 
 #include "{{ $.Prefix }}TableDataBase.h"
 {{- range .FileRefs }}
-#include "{{ $.Prefix }}{{ pascal .Name }}.hpp"
+#include "{{ $.Prefix }}{{ pascal .Name }}.h"
 {{- end }}
+#include "{{ $.Prefix }}{{ pascal .Name }}.generated.h"
 {{ range append .AnonymousStructs .Struct }}
 USTRUCT(BlueprintType)
 struct F{{ $.Prefix }}{{ pascal .Name }} : public F{{ $.Prefix }}TableDataBase
@@ -14,7 +15,7 @@ struct F{{ $.Prefix }}{{ pascal .Name }} : public F{{ $.Prefix }}TableDataBase
     GENERATED_BODY()
 
     {{- range .Fields }}
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     {{ fieldType . }} {{ .Name }};
     {{- end }}
 
