@@ -12,6 +12,7 @@ const (
 )
 
 type TableEncoder struct {
+	When     *When    `yaml:"when,omitempty"`
 	Tags     []string `yaml:"tags"`
 	RootDir  string   `yaml:"root_dir"`
 	Indent   string   `yaml:"indent"`

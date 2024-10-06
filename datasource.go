@@ -10,6 +10,8 @@ type Datasource interface {
 }
 
 type DatasourceConfig struct {
+	When *When `yaml:"when,omitempty"`
+
 	loaded         Datasource                `yaml:"-"`
 	SpreadsheetGAS *DatasourceSpreadsheetGAS `yaml:"spreadsheet_gas,omitempty"`
 	Excel          *DatasourceExcel          `yaml:"excel,omitempty"`

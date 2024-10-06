@@ -43,6 +43,16 @@ func containsAny[T comparable](arr []T, v ...T) bool {
 	return false
 }
 
+func filter[T any](arr []T, f func(T) bool) []T {
+	ret := make([]T, 0)
+	for _, v := range arr {
+		if f(v) {
+			ret = append(ret, v)
+		}
+	}
+	return ret
+}
+
 func glob(patterns []string) iter.Seq[string] {
 	return func(yield func(string) bool) {
 		visited := make(map[string]struct{})

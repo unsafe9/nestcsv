@@ -9,9 +9,15 @@ import (
 )
 
 func main() {
-	var configPath string
+	var (
+		configPath  string
+		commandArgs string
+	)
 	flag.StringVar(&configPath, "c", "nestcsv.yaml", "config file path")
+	flag.StringVar(&commandArgs, "a", "", "command arguments")
 	flag.Parse()
+
+	nestcsv.SetCommandArgs(commandArgs)
 
 	config, err := nestcsv.ParseConfig(configPath)
 	if err != nil {

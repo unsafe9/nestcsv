@@ -10,6 +10,7 @@ type Codegen interface {
 }
 
 type CodegenConfig struct {
+	When *When    `yaml:"when,omitempty"`
 	Tags []string `yaml:"tags"`
 
 	loaded Codegen     `yaml:"-"`

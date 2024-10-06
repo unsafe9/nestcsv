@@ -1,5 +1,10 @@
 datasources:
-  - csv:
+  - when:
+      env:
+        CSV: "true"
+      args:
+        - csv
+    csv:
       patterns:
         - ./csv/*.csv
 
