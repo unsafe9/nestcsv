@@ -16,6 +16,8 @@ var goEmptyImportRegexp = regexp.MustCompile(`import \(\s*\n\s*\)`)
 type CodegenGo struct {
 	RootDir     string `yaml:"root_dir"`
 	PackageName string `yaml:"package_name"`
+	Singleton   bool   `yaml:"singleton"`
+	Context     bool   `yaml:"context"`
 }
 
 func (c *CodegenGo) Generate(code *Code) error {
@@ -23,23 +25,21 @@ func (c *CodegenGo) Generate(code *Code) error {
 		c.PackageName = filepath.Base(c.RootDir)
 	}
 
-	values := map[string]any{
-		"PackageName": c.PackageName,
-	}
-	if err := c.template("table_base.go", "table_base.go.tpl", values); err != nil {
+	if err := c.template("table_base.go", "table_base.go.tpl", nil); err != nil {
 		return err
 	}
 
 	for file := range code.Files() {
-		values["File"] = file
+		values := map[string]any{
+			"File": file,
+		}
 		if err := c.template(file.Name+".go", "file.go.tpl", values); err != nil {
 			return err
 		}
 	}
 
-	values = map[string]any{
-		"PackageName": c.PackageName,
-		"Tables":      code.Tables,
+	values := map[string]any{
+		"Tables": code.Tables,
 	}
 	err := c.template("loader.go", "loader.go.tpl", values)
 	if err != nil {
@@ -49,7 +49,14 @@ func (c *CodegenGo) Generate(code *Code) error {
 	return nil
 }
 
-func (c *CodegenGo) template(fileName, templateName string, values any) error {
+func (c *CodegenGo) template(fileName, templateName string, values map[string]any) error {
+	if values == nil {
+		values = make(map[string]any)
+	}
+	values["PackageName"] = c.PackageName
+	values["Singleton"] = c.Singleton
+	values["Context"] = c.Context
+
 	tmpl, err := template.
 		New(filepath.Base(templateName)).
 		Funcs(templateFuncMap).

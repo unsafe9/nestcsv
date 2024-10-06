@@ -2,11 +2,43 @@
 
 package {{ .PackageName }}
 
+{{- if .Context }}
+
+import (
+    "context"
+)
+{{- end }}
+
 type Tables struct{
 {{- range .Tables }}
     {{ pascal .Struct.Name }} {{ pascal .Struct.Name }}Table
 {{- end }}
 }
+
+{{- if .Singleton }}
+
+var tables *Tables
+
+func Get() *Tables {
+    return tables
+}
+{{- end }}
+
+{{- if .Context }}
+
+type tablesContextKey struct{}
+
+var tablesContextKeyInstance = tablesContextKey{}
+
+func WithTables(ctx context.Context, t *Tables) context.Context {
+    return context.WithValue(ctx, tablesContextKeyInstance, t)
+}
+
+func TablesFromContext(ctx context.Context) *Tables {
+    t, _ := ctx.Value(tablesContextKeyInstance).(*Tables)
+    return t
+}
+{{- end }}
 
 func LoadTablesFromFile(basePath string) (*Tables, error) {
     var t Tables
@@ -14,6 +46,9 @@ func LoadTablesFromFile(basePath string) (*Tables, error) {
     if err := t.{{ pascal .Struct.Name }}.LoadFromFile(basePath); err != nil {
         return nil, err
     }
+{{- end }}
+{{- if .Singleton }}
+    tables = &t
 {{- end }}
     return &t, nil
 }

@@ -24,6 +24,8 @@ codegens:
     go: 
       root_dir: ./go
       package_name: table
+      singleton: true
+      context: true
   - tags: [all, client]
     ue5:
       root_dir: ./ue5

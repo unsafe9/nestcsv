@@ -2,9 +2,32 @@
 
 package table
 
+import (
+	"context"
+)
+
 type Tables struct {
 	Complex ComplexTable
 	Types   TypesTable
+}
+
+var tables *Tables
+
+func Get() *Tables {
+	return tables
+}
+
+type tablesContextKey struct{}
+
+var tablesContextKeyInstance = tablesContextKey{}
+
+func WithTables(ctx context.Context, t *Tables) context.Context {
+	return context.WithValue(ctx, tablesContextKeyInstance, t)
+}
+
+func TablesFromContext(ctx context.Context) *Tables {
+	t, _ := ctx.Value(tablesContextKeyInstance).(*Tables)
+	return t
 }
 
 func LoadTablesFromFile(basePath string) (*Tables, error) {
@@ -15,6 +38,7 @@ func LoadTablesFromFile(basePath string) (*Tables, error) {
 	if err := t.Types.LoadFromFile(basePath); err != nil {
 		return nil, err
 	}
+	tables = &t
 	return &t, nil
 }
 
