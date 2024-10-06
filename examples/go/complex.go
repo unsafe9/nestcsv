@@ -26,6 +26,10 @@ func (t *ComplexTable) SheetName() string {
 	return "complex"
 }
 
+func (t *ComplexTable) GetRows() interface{} {
+	return t.Rows
+}
+
 func (t *ComplexTable) Load() error {
 	file, err := os.Open("../json/server/complex.json")
 	if err != nil {

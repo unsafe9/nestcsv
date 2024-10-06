@@ -4,6 +4,7 @@ package {{ .PackageName }}
 
 type TableBase interface {
     SheetName() string
+    GetRows() interface{}
     Load() error
 }
 

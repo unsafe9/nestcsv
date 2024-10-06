@@ -34,6 +34,10 @@ func (t *{{ pascal .Struct.Name }}Table) SheetName() string {
     return "{{ .Struct.Name }}"
 }
 
+func (t *{{ pascal .Struct.Name }}Table) GetRows() interface{} {
+    return t.Rows
+}
+
 func (t *{{ pascal .Struct.Name }}Table) Load() error {
     file, err := os.Open("{{ $.DataLoadPath }}")
     if err != nil {

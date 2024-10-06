@@ -30,6 +30,10 @@ func (t *TypesTable) SheetName() string {
 	return "types"
 }
 
+func (t *TypesTable) GetRows() interface{} {
+	return t.Rows
+}
+
 func (t *TypesTable) Load() error {
 	file, err := os.Open("../json/server/types.json")
 	if err != nil {

@@ -4,5 +4,6 @@ package table
 
 type TableBase interface {
 	SheetName() string
+	GetRows() interface{}
 	Load() error
 }
