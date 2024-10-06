@@ -1,0 +1,19 @@
+datasources:
+  - csv:
+      patterns:
+        - ./sample-data.csv
+
+outputs:
+  - root_dir: ./server/tabledata
+    tags: [all,server,client]
+
+codegens:
+  - tags: [all,server]
+    go:
+      root_dir: ./server/servertable
+  - tags: [all,client]
+    go:
+      root_dir: ./server/clienttable
+  - tags: [all,client]
+    go:
+      root_dir: ./client/table

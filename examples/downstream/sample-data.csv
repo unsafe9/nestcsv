@@ -1,0 +1,6 @@
+,,,
+all,client,server,all
+ID,ClientData,ServerData,CommonData
+int,string,string,string
+1,Client1,Server1,Common1
+2,Client2,Server2,Common2
