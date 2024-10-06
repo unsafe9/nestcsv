@@ -49,11 +49,17 @@ func SetCommandArgs(argsStr string) {
 }
 
 type When struct {
+	// Not - if true, the condition is negated
+	Not  bool              `yaml:"not"`
 	Env  map[string]string `yaml:"env,omitempty"`
 	Args []string          `yaml:"args,omitempty"`
 }
 
 func (w *When) Match() bool {
+	return w.match() != w.Not
+}
+
+func (w *When) match() bool {
 	for key, value := range w.Env {
 		if os.Getenv(key) != value {
 			return false
