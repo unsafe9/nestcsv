@@ -159,7 +159,9 @@ func has(arr any, v any) bool {
 }
 
 func pascal(s string) string {
-	tokens := strings.Split(strings.ReplaceAll(s, "_", " "), " ")
+	s = strings.ReplaceAll(s, "_", " ")
+	s = strings.ReplaceAll(s, "-", " ")
+	tokens := strings.Split(s, " ")
 	for i, token := range tokens {
 		if len(token) > 1 {
 			tokens[i] = strings.ToUpper(token[:1]) + token[1:]
