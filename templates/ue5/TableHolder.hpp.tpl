@@ -24,6 +24,16 @@ public:
     TUniquePtr<F{{ $.Prefix }}{{ pascal .Name }}Table> {{ pascal .Name }};
     {{- end }}
 
+    UFUNCTION(BlueprintCallable)
+    TArray<F{{ .Prefix }}TableBase*> GetTables() const
+    {
+        TArray<F{{ .Prefix }}TableBase*> Tables;
+        {{- range .Tables }}
+        Tables.Add({{ pascal .Name }}.Get());
+        {{- end }}
+        return Tables;
+    }
+
     {{/* FIXME: this method maybe can select return value directly */ -}}
     UFUNCTION(BlueprintCallable)
     F{{ .Prefix }}TableBase* GetBySheetName(FString SheetName) const

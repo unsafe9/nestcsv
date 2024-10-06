@@ -18,6 +18,14 @@ func LoadTables() (*Tables, error) {
     return &t, nil
 }
 
+func (t *Tables) GetTables() []TableBase {
+    return []TableBase{
+{{- range .Tables }}
+        &t.{{ pascal .Struct.Name }},
+{{- end }}
+    }
+}
+
 func (t *Tables) GetBySheetName(sheetName string) TableBase {
     switch sheetName {
 {{- range .Tables }}

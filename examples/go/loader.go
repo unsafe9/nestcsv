@@ -18,6 +18,13 @@ func LoadTables() (*Tables, error) {
 	return &t, nil
 }
 
+func (t *Tables) GetTables() []TableBase {
+	return []TableBase{
+		&t.Complex,
+		&t.Types,
+	}
+}
+
 func (t *Tables) GetBySheetName(sheetName string) TableBase {
 	switch sheetName {
 	case "complex":
