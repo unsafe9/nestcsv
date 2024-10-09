@@ -115,7 +115,7 @@ func (c *CodegenGo) fieldElemType(f *CodeStructField) string {
 		return "string"
 	case FieldTypeTime:
 		return "time.Time"
-	case FileTypeJSON:
+	case FieldTypeJSON:
 		return "interface{}"
 	case FieldTypeStruct:
 		return pascal(f.StructRef.Name)

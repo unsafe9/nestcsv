@@ -29,10 +29,10 @@ datasources:
         #- ./debug/*.csv
 
 outputs:
-  - root_dir: ./output
-    tags: [server, client]
-    file_type: json
-    indent: "  "
+  - tags: [server, client]
+    json:
+      root_dir: ./output
+      indent: "  "
 
 codegens:
   - tags: [server]

@@ -9,15 +9,18 @@ datasources:
         - ./csv/*.csv
 
 outputs:
-  - root_dir: ./json/client
-    indent: "  "
-    tags: [all, client]
-  - root_dir: ./json/server
-    indent: "  "
-    tags: [all, server]
-  - root_dir: ./json
-    indent: "  "
-    tags: [all, client, server]
+  - tags: [all, client]
+    json:
+      root_dir: ./json/client
+      indent: "  "
+  - tags: [all, server]
+    json:
+      root_dir: ./json/server
+      indent: "  "
+  - tags: [all, client, server]
+    json:
+      root_dir: ./json
+      indent: "  "
 
 codegens:
   - tags: [all, server]

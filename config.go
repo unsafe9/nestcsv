@@ -12,7 +12,7 @@ var commandArgs []string
 
 type Config struct {
 	Datasources []DatasourceConfig `yaml:"datasources"`
-	Outputs     []TableEncoder     `yaml:"outputs"`
+	Outputs     []OutputConfig     `yaml:"outputs"`
 	Codegens    []CodegenConfig    `yaml:"codegens"`
 }
 
@@ -31,7 +31,7 @@ func ParseConfig(configPath string) (*Config, error) {
 	config.Datasources = filter(config.Datasources, func(d DatasourceConfig) bool {
 		return d.When == nil || d.When.Match()
 	})
-	config.Outputs = filter(config.Outputs, func(e TableEncoder) bool {
+	config.Outputs = filter(config.Outputs, func(e OutputConfig) bool {
 		return e.When == nil || e.When.Match()
 	})
 	config.Codegens = filter(config.Codegens, func(c CodegenConfig) bool {
@@ -71,4 +71,17 @@ func (w *When) match() bool {
 		}
 	}
 	return true
+}
+
+type exclusiveConfigGroup[T any] struct {
+	loaded T
+}
+
+func (c *exclusiveConfigGroup[T]) postUnmarshalYAML(parent any) error {
+	list := collectStructFieldsImplementing[T](parent)
+	if len(list) != 1 {
+		return fmt.Errorf("expected exactly one %T, got %d", c.loaded, len(list))
+	}
+	c.loaded = list[0]
+	return nil
 }

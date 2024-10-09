@@ -49,7 +49,7 @@ func main() {
 	for tableData := range out {
 		wg.Go(func() error {
 			for _, output := range config.Outputs {
-				if err := output.Encode(tableData); err != nil {
+				if err := output.Write(tableData); err != nil {
 					return err
 				}
 			}

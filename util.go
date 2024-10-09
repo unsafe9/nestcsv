@@ -127,7 +127,7 @@ func collectStructFieldsImplementing[T any](structPtr any) []T {
 	)
 	for i := 0; i < v.NumField(); i++ {
 		f := v.Field(i)
-		if f.IsNil() || !f.Type().Implements(it) {
+		if f.Kind() != reflect.Ptr || f.IsNil() || !f.Type().Implements(it) {
 			continue
 		}
 		ret = append(ret, f.Interface().(T))

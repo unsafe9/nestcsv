@@ -4,8 +4,9 @@ datasources:
         - ./sample-data.csv
 
 outputs:
-  - root_dir: ./server/tabledata
-    tags: [all,server,client]
+  - tags: [all,server,client]
+    json:
+      root_dir: ./server/tabledata
 
 codegens:
   - tags: [all,server]

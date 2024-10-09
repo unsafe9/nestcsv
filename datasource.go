@@ -1,7 +1,6 @@
 package nestcsv
 
 import (
-	"fmt"
 	"gopkg.in/yaml.v3"
 )
 
@@ -12,7 +11,7 @@ type Datasource interface {
 type DatasourceConfig struct {
 	When *When `yaml:"when,omitempty"`
 
-	loaded         Datasource                `yaml:"-"`
+	exclusiveConfigGroup[Datasource]
 	SpreadsheetGAS *DatasourceSpreadsheetGAS `yaml:"spreadsheet_gas,omitempty"`
 	Excel          *DatasourceExcel          `yaml:"excel,omitempty"`
 	CSV            *DatasourceCSV            `yaml:"csv,omitempty"`
@@ -27,10 +26,5 @@ func (c *DatasourceConfig) UnmarshalYAML(node *yaml.Node) error {
 	if err := node.Decode((*wrapped)(c)); err != nil {
 		return err
 	}
-	list := collectStructFieldsImplementing[Datasource](c)
-	if len(list) != 1 {
-		return fmt.Errorf("expected exactly one datasource, got %d", len(list))
-	}
-	c.loaded = list[0]
-	return nil
+	return c.postUnmarshalYAML(c)
 }
