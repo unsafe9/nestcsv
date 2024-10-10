@@ -11,9 +11,9 @@ import (
 
 var structTypeIDRegex = regexp.MustCompile(`^/.*/$`)
 
-type StructTypes map[string]string
+type StructMap map[string]string
 
-func (t StructTypes) Get(id string) (string, bool) {
+func (t StructMap) Get(id string) (string, bool) {
 	if t == nil {
 		return "", false
 	}
@@ -33,10 +33,10 @@ func (t StructTypes) Get(id string) (string, bool) {
 }
 
 type TableMetadata struct {
-	AsMap       bool        `query:"as_map"`
-	SortAscBy   string      `query:"sort_asc_by"`
-	SortDescBy  string      `query:"sort_desc_by"`
-	StructTypes StructTypes `query:"struct_type"`
+	AsMap      bool      `query:"as_map"`
+	SortAscBy  string    `query:"sort_asc_by"`
+	SortDescBy string    `query:"sort_desc_by"`
+	Structs    StructMap `query:"struct"`
 }
 
 func (m *TableMetadata) Validate(td *TableData) error {
