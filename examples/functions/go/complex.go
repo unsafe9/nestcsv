@@ -8,15 +8,15 @@ import (
 	"path/filepath"
 )
 
-type ComplexSKU struct {
-	Type string `json:"Type"`
-	ID   string `json:"ID"`
+type ComplexA struct {
+	SKU2 SKU `json:"SKU2"`
 }
 
 type Complex struct {
-	ID      int          `json:"ID"`
-	SKU     []ComplexSKU `json:"SKU"`
-	Rewards []Reward     `json:"Rewards"`
+	ID      int      `json:"ID"`
+	SKU     []SKU    `json:"SKU"`
+	Rewards []Reward `json:"Rewards"`
+	A       ComplexA `json:"A"`
 }
 
 type ComplexTable struct {

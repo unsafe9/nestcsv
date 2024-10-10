@@ -3,23 +3,8 @@
 #pragma once
 
 #include "NestTableDataBase.h"
+#include "NestSKU.h"
 #include "NestComplex.generated.h"
-
-USTRUCT(BlueprintType)
-struct FNestComplexSKU : public FNestTableDataBase
-{
-    GENERATED_BODY()
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-    FString Type;
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-    FString ID;
-
-    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) override
-    {
-        JsonObject.ToSharedRef()->TryGetStringField(TEXT("Type"), Type);
-        JsonObject.ToSharedRef()->TryGetStringField(TEXT("ID"), ID);
-    }
-};
 
 USTRUCT(BlueprintType)
 struct FNestComplex : public FNestTableDataBase
@@ -28,7 +13,7 @@ struct FNestComplex : public FNestTableDataBase
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TArray<FString> Tags;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-    TArray<FNestComplexSKU> SKU;
+    TArray<FNestSKU> SKU;
 
     virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) override
     {
@@ -52,7 +37,7 @@ struct FNestComplex : public FNestTableDataBase
                 const TSharedPtr<FJsonObject> *ObjPtr = nullptr;
                 if (Item->TryGetObject(ObjPtr))
                 {
-                    FNestComplexSKU FieldItem;
+                    FNestSKU FieldItem;
                     FieldItem.Load(*ObjPtr);
                     SKU.Add(FieldItem);
                 }

@@ -79,7 +79,7 @@ func (a *codeAnalyzer) buildStruct(file *CodeFile, table *codeAnalyzerTable, nam
 
 		if field.Type == FieldTypeStruct {
 			id := field.Identifier()
-			if name, ok := table.metadata.StructTypes[id]; ok {
+			if name, ok := table.metadata.StructTypes.Get(id); ok {
 				refFile, err := a.getOrAddNamedStructFile(table, name, field)
 				if err != nil {
 					return nil, err

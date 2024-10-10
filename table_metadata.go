@@ -2,18 +2,41 @@ package nestcsv
 
 import (
 	"fmt"
-	"net/url"
 	"reflect"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
 )
 
+var structTypeIDRegex = regexp.MustCompile(`^/.*/$`)
+
+type StructTypes map[string]string
+
+func (t StructTypes) Get(id string) (string, bool) {
+	if t == nil {
+		return "", false
+	}
+	if typ, ok := t[id]; ok {
+		return typ, true
+	}
+	for k, v := range t {
+		if !structTypeIDRegex.MatchString(k) {
+			continue
+		}
+		k = strings.Trim(k, "/")
+		if match, _ := regexp.MatchString(k, id); match {
+			return v, true
+		}
+	}
+	return "", false
+}
+
 type TableMetadata struct {
-	AsMap       bool              `query:"as_map"`
-	SortAscBy   string            `query:"sort_asc_by"`
-	SortDescBy  string            `query:"sort_desc_by"`
-	StructTypes map[string]string `query:"struct_type"`
+	AsMap       bool        `query:"as_map"`
+	SortAscBy   string      `query:"sort_asc_by"`
+	SortDescBy  string      `query:"sort_desc_by"`
+	StructTypes StructTypes `query:"struct_type"`
 }
 
 func (m *TableMetadata) Validate(td *TableData) error {
@@ -56,9 +79,16 @@ func (m *TableMetadata) validateSortByField(td *TableData, field string) error {
 type TableMetadataQuery string
 
 func (q TableMetadataQuery) Decode() (*TableMetadata, error) {
-	values, err := url.ParseQuery(string(q))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse query: %w", err)
+	values := make(map[string][]string)
+	if q != "" {
+		kvs := strings.Split(string(q), "&")
+		for _, kv := range kvs {
+			parts := strings.Split(kv, "=")
+			if len(parts) != 2 {
+				return nil, fmt.Errorf("invalid query: %s", kv)
+			}
+			values[parts[0]] = append(values[parts[0]], parts[1])
+		}
 	}
 
 	var metadata TableMetadata
