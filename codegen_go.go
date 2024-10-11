@@ -11,8 +11,6 @@ import (
 	"text/template"
 )
 
-var goEmptyImportRegexp = regexp.MustCompile(`import \(\s*\n\s*\)`)
-
 type CodegenGo struct {
 	RootDir     string `yaml:"root_dir"`
 	PackageName string `yaml:"package_name"`
@@ -41,22 +39,12 @@ func (c *CodegenGo) Generate(code *Code) error {
 	values := map[string]any{
 		"Tables": code.Tables,
 	}
-	err := c.template("loader.go", "loader.go.tpl", values)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return c.template("loader.go", "loader.go.tpl", values)
 }
 
-func (c *CodegenGo) template(fileName, templateName string, values map[string]any) error {
-	if values == nil {
-		values = make(map[string]any)
-	}
-	values["PackageName"] = c.PackageName
-	values["Singleton"] = c.Singleton
-	values["Context"] = c.Context
+var goEmptyImportRegexp = regexp.MustCompile(`import \(\s*\n\s*\)`)
 
+func (c *CodegenGo) template(fileName, templateName string, values map[string]any) error {
 	tmpl, err := template.
 		New(filepath.Base(templateName)).
 		Funcs(templateFuncMap).
@@ -70,7 +58,18 @@ func (c *CodegenGo) template(fileName, templateName string, values map[string]an
 	}
 
 	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, values); err != nil {
+	err = tmpl.Execute(
+		&buf,
+		extendMap(
+			values,
+			map[string]any{
+				"PackageName": c.PackageName,
+				"Singleton":   c.Singleton,
+				"Context":     c.Context,
+			},
+		),
+	)
+	if err != nil {
 		return fmt.Errorf("error executing template: %s, %w", fileName, err)
 	}
 
@@ -81,14 +80,14 @@ func (c *CodegenGo) template(fileName, templateName string, values map[string]an
 		log.Printf("%s", string(fileBytes))
 		return fmt.Errorf("error formatting source: %s, %w", fileName, err)
 	}
+
 	file, err := createFile(c.RootDir, strings.ToLower(fileName), "go")
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	_, err = file.Write(fileBytes)
-	if err != nil {
+	if _, err = file.Write(fileBytes); err != nil {
 		return err
 	}
 	return nil

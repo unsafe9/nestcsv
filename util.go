@@ -119,6 +119,16 @@ func saveCSVFile(rootDir, fileName string, csvData [][]string) error {
 	return nil
 }
 
+func extendMap[K comparable, V any](m map[K]V, m2 map[K]V) map[K]V {
+	if m == nil {
+		m = make(map[K]V)
+	}
+	for k, v := range m2 {
+		m[k] = v
+	}
+	return m
+}
+
 func collectStructFieldsImplementing[T any](structPtr any) []T {
 	var (
 		ret = make([]T, 0)

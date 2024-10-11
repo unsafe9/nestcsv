@@ -11,24 +11,23 @@ type CodegenUE5 struct {
 }
 
 func (c *CodegenUE5) Generate(code *Code) error {
+	if err := c.template("TableDataBase.h", "TableDataBase.h.tpl", nil); err != nil {
+		return err
+	}
+	if err := c.template("TableBase.h", "TableBase.h.tpl", nil); err != nil {
+		return err
+	}
+
 	values := map[string]any{
-		"Prefix": c.Prefix,
+		"Tables": code.Tables,
 	}
-	if err := c.template("TableDataBase.h", "TableDataBase.h.tpl", values); err != nil {
-		return err
-	}
-	if err := c.template("TableBase.h", "TableBase.h.tpl", values); err != nil {
-		return err
-	}
-	values["Tables"] = code.Tables
 	if err := c.template("TableHolder.h", "TableHolder.h.tpl", values); err != nil {
 		return err
 	}
 
 	for file := range code.Files() {
-		values := map[string]any{
-			"File":   file,
-			"Prefix": c.Prefix,
+		values = map[string]any{
+			"File": file,
 		}
 		if err := c.template(pascal(file.Name)+".h", "file.h.tpl", values); err != nil {
 			return err
@@ -43,7 +42,7 @@ func (c *CodegenUE5) Generate(code *Code) error {
 	return nil
 }
 
-func (c *CodegenUE5) template(fileName, templateName string, values any) error {
+func (c *CodegenUE5) template(fileName, templateName string, values map[string]any) error {
 	file, err := createFile(c.RootDir, c.Prefix+fileName, filepath.Ext(fileName))
 	if err != nil {
 		return err
@@ -61,7 +60,16 @@ func (c *CodegenUE5) template(fileName, templateName string, values any) error {
 	if err != nil {
 		return err
 	}
-	return tmpl.Execute(file, values)
+
+	return tmpl.Execute(
+		file,
+		extendMap(
+			values,
+			map[string]any{
+				"Prefix": c.Prefix,
+			},
+		),
+	)
 }
 
 func (c *CodegenUE5) fieldType(f *CodeStructField) string {
