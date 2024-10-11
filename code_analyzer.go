@@ -125,7 +125,7 @@ func (a *codeAnalyzer) getOrAddAnonymousStruct(file *CodeFile, table *codeAnalyz
 func (a *codeAnalyzer) getOrAddNamedStructFile(table *codeAnalyzerTable, name string, field *TableField) (*CodeFile, error) {
 	field = field.Clone()
 	if fileField, ok := a.namedStructFileFields[name]; ok {
-		if !field.StructFieldsEqual(fileField) {
+		if !field.StructEqual(fileField) {
 			return nil, fmt.Errorf("named struct %q has different fields", name)
 		}
 		return a.namedStructFiles[name], nil
