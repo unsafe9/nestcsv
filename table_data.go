@@ -48,7 +48,7 @@ func ParseTableData(name string, csvData [][]string) (*TableData, error) {
 	)
 
 	for col := 0; col < columns; col++ {
-		fieldName := csvData[TableFieldNameRow][col]
+		fieldName := strings.ReplaceAll(strings.TrimSpace(csvData[TableFieldNameRow][col]), "\n", "")
 		if fieldName == "" || strings.HasPrefix(fieldName, "#") {
 			dropColumns = append(dropColumns, col)
 		} else {
