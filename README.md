@@ -57,10 +57,10 @@ nestcsv -c ../config/config.yaml
 ## How to structure the schema
 See [examples](./examples)
 
-## 0.0.1 Roadmap
+## 0.0.2 Roadmap
 ### Docs
 - [ ] Add a schema structure guide
-- [ ] Add more examples
+- [ ] Add an example of UE5 json file loading
 ### Datasource
 - [ ] Add Google OAuth2 authentication for Google Apps Script
 - [ ] Integrate spreadsheet datasource using the Sheets API
@@ -68,3 +68,4 @@ See [examples](./examples)
 - [ ] Extract time format settings into the configuration file
 ### Code generation
 - [ ] Protobuf schema generation
+- [ ] TypeScript code generation
