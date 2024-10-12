@@ -79,17 +79,21 @@ func glob(patterns []string) iter.Seq[string] {
 	}
 }
 
+func makeFilePath(rootDir, fileName, ext string) string {
+	ext = "." + strings.TrimPrefix(ext, ".")
+	fileName = strings.TrimSuffix(fileName, ext) + ext
+	return filepath.Join(rootDir, fileName)
+}
+
 func createFile(rootDir, fileName, ext string) (*os.File, error) {
 	if err := os.MkdirAll(rootDir, os.ModePerm); err != nil {
 		return nil, fmt.Errorf("failed to create the directory: %s, %w", rootDir, err)
 	}
 
-	ext = "." + strings.TrimPrefix(ext, ".")
-	fileName = strings.TrimSuffix(fileName, ext) + ext
-
-	file, err := os.Create(filepath.Join(rootDir, fileName))
+	filePath := makeFilePath(rootDir, fileName, ext)
+	file, err := os.Create(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create the file: %s, %w", fileName, err)
+		return nil, fmt.Errorf("failed to create the file: %s, %w", filePath, err)
 	}
 	return file, nil
 }
