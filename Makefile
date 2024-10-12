@@ -6,3 +6,10 @@ test:
 	@cd examples/downstream && \
 		go run ../../cmd/nestcsv
 .PHONY: test
+
+release:
+	#export GITHUB_TOKEN=...
+	git tag -a v$(VERSION) -m "Release v$(VERSION)"
+	git push origin v$(VERSION)
+	goreleaser release --clean
+.PHONY: release
