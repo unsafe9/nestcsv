@@ -11,6 +11,12 @@ import (
 
 var structTypeIDRegex = regexp.MustCompile(`^/.*/$`)
 
+// StructMap - you can map a field id to a named struct
+//
+//	You can match the field id with a regex by enclosing it with / (e.g. /regex/),
+//	If the field is part of a named struct, you should omit the parent struct's name.
+//	ex. RewardWin.Weight,RewardWin.RewardPool.Reward.Type,RewardWin.RewardPool.Reward.Param
+//		struct=RewardWin:GameReward&struct=/RewardPool\.Reward$/:GameRewardPool
 type StructMap map[string]string
 
 func (t StructMap) Get(id string) (string, bool) {
