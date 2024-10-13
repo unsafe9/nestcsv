@@ -93,13 +93,28 @@ func (p *TableParser) Marshal(fields []*TableField) (any, error) {
 		rows       = make([]map[string]any, 0, len(rowMap))
 		rowIndices = make([]int, 0, len(rowMap))
 
+		multiLineArrayExists = nil != findPtr(
+			fields,
+			func(field *TableField) bool {
+				for f := range field.Iterate() {
+					if f.IsMultiLineArray {
+						return true
+					}
+				}
+				return false
+			},
+		)
 		multiLineArrayRowCount = make(map[string]int)
 	)
 
 	for rowIdx, row := range td.DataRows {
 		id := row[TableFieldIndexCol]
 		rowContainer, isMultiLineRow := rowMap[id]
-		if !isMultiLineRow {
+		if isMultiLineRow {
+			if !multiLineArrayExists {
+				return nil, fmt.Errorf("there is no multi-line array field but id is duplicated: %s, %s", td.Name, id)
+			}
+		} else {
 			rowContainer = make(map[string]any)
 			rowMap[id] = rowContainer
 
