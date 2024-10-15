@@ -3,13 +3,13 @@
 package table
 
 type RewardParamValue struct {
+	Str   string  `json:"Str"`
 	Int   int     `json:"Int"`
 	Float float64 `json:"Float"`
-	Str   string  `json:"Str"`
 }
 
 type Reward struct {
 	Type       string           `json:"Type"`
-	ParamType  string           `json:"ParamType"`
 	ParamValue RewardParamValue `json:"ParamValue"`
+	ParamType  string           `json:"ParamType"`
 }

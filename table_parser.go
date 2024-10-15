@@ -124,78 +124,96 @@ func (p *TableParser) Marshal(fields []*TableField) (any, error) {
 			}
 		}
 
-		for _, topField := range fields {
-			container := rowContainer
-			for field := range topField.Iterate() {
-				var multiLineArrayIdx int
-				multiLineArrayField := field.GetMultiLineArrayField()
-				if multiLineArrayField != nil {
-					rowCountIdx := id + "_" + multiLineArrayField.Identifier()
-					if multiLineArrayField == field {
-						if p.checkAllCellsEmpty(field, row) {
-							break
-						}
-						multiLineArrayRowCount[rowCountIdx]++
+		var visitField func(*TableField, map[string]any) error
+		visitField = func(field *TableField, container map[string]any) error {
+			var multiLineArrayIdx int
+			multiLineArrayField := field.GetMultiLineArrayField()
+			if multiLineArrayField != nil {
+				rowCountIdx := id + "_" + multiLineArrayField.Identifier()
+				if multiLineArrayField == field {
+					if p.checkAllCellsEmpty(field, row) {
+						return nil
 					}
-					multiLineArrayIdx = multiLineArrayRowCount[rowCountIdx] - 1
-
-				} else if isMultiLineRow {
-					// skip if it's non array fields
-					continue
+					multiLineArrayRowCount[rowCountIdx]++
 				}
+				multiLineArrayIdx = multiLineArrayRowCount[rowCountIdx] - 1
 
-				if len(field.StructFields) > 0 {
-					if field.IsMultiLineArray {
-						// fill struct array container
-						objectArrayValue, ok := container[field.Name]
-						if !ok {
-							objectArrayValue = make([]map[string]any, 0)
-						}
-						objectArray := objectArrayValue.([]map[string]any)
-						if len(objectArray) <= multiLineArrayIdx {
-							v := make(map[string]any)
-							objectArray = append(objectArray, v)
-						}
-						container[field.Name] = objectArray
-						container = objectArray[multiLineArrayIdx]
-
-					} else {
-						// fill struct container
-						objectValue, ok := container[field.Name]
-						if !ok {
-							objectValue = make(map[string]any)
-							container[field.Name] = objectValue
-						}
-						container = objectValue.(map[string]any)
+			} else if isMultiLineRow {
+				// struct fields might have a multi-line array field
+				for _, f := range field.StructFields {
+					if err := visitField(f, container); err != nil {
+						return err
 					}
+				}
+				// skip the rest of the process
+				return nil
+			}
 
-				} else if field.IsCellArray {
-					// fill array value
-					cell := row[field.column]
-					var arr []any
-					if len(cell) > 0 {
-						cells := strings.Split(cell, ",")
-						for _, elem := range cells {
-							v, err := p.parseGoValue(field.Type, elem)
-							if err != nil {
-								return nil, fmt.Errorf("failed to parse array value: %s, %s, %d, %s, %w", td.Name, field.Name, rowIdx, cell, err)
-							}
-							arr = append(arr, v)
-						}
-					} else {
-						arr = make([]any, 0)
+			if len(field.StructFields) > 0 {
+				if field.IsMultiLineArray {
+					// fill struct array container
+					objectArrayValue, ok := container[field.Name]
+					if !ok {
+						objectArrayValue = make([]map[string]any, 0)
 					}
-					container[field.Name] = arr
+					objectArray := objectArrayValue.([]map[string]any)
+					if len(objectArray) <= multiLineArrayIdx {
+						v := make(map[string]any)
+						objectArray = append(objectArray, v)
+					}
+					container[field.Name] = objectArray
+					container = objectArray[multiLineArrayIdx]
 
 				} else {
-					// fill single value
-					cell := row[field.column]
-					v, err := p.parseGoValue(field.Type, cell)
-					if err != nil {
-						return nil, fmt.Errorf("failed to parse value: %s, %s, %d, %s, %w", td.Name, field.Name, rowIdx, cell, err)
+					// fill struct container
+					objectValue, ok := container[field.Name]
+					if !ok {
+						objectValue = make(map[string]any)
+						container[field.Name] = objectValue
 					}
-					container[field.Name] = v
+					container = objectValue.(map[string]any)
 				}
+
+				for _, f := range field.StructFields {
+					if err := visitField(f, container); err != nil {
+						return err
+					}
+				}
+
+			} else if field.IsCellArray {
+				// fill array value
+				cell := row[field.column]
+				var arr []any
+				if len(cell) > 0 {
+					cells := strings.Split(cell, ",")
+					for _, elem := range cells {
+						v, err := p.parseGoValue(field.Type, elem)
+						if err != nil {
+							return fmt.Errorf("failed to parse array value: %s, %s, %d, %s, %w", td.Name, field.Name, rowIdx, cell, err)
+						}
+						arr = append(arr, v)
+					}
+				} else {
+					arr = make([]any, 0)
+				}
+				container[field.Name] = arr
+
+			} else {
+				// fill single value
+				cell := row[field.column]
+				v, err := p.parseGoValue(field.Type, cell)
+				if err != nil {
+					return fmt.Errorf("failed to parse value: %s, %s, %d, %s, %w", td.Name, field.Name, rowIdx, cell, err)
+				}
+				container[field.Name] = v
+			}
+
+			return nil
+		}
+
+		for _, field := range fields {
+			if err := visitField(field, rowContainer); err != nil {
+				return nil, err
 			}
 		}
 	}
