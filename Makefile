@@ -7,6 +7,9 @@ test:
 		go run ../../cmd/nestcsv
 .PHONY: test
 
+build-local:
+	goreleaser build --snapshot --clean
+
 release:
 	#export GITHUB_TOKEN=...
 	git tag -a v$(VERSION) -m "Release v$(VERSION)"
