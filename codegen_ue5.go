@@ -104,8 +104,9 @@ func (c *CodegenUE5) template(fileName, templateName string, withRegions bool, v
 		New(filepath.Base(templateName)).
 		Funcs(templateFuncMap).
 		Funcs(template.FuncMap{
-			"fieldType":     c.fieldType,
-			"fieldElemType": c.fieldElemType,
+			"fieldType":          c.fieldType,
+			"fieldElemType":      c.fieldElemType,
+			"fieldPrimitiveType": c.fieldPrimitiveType,
 		}).
 		ParseFS(templateFS, "templates/ue5/"+templateName)
 	if err != nil {
@@ -131,7 +132,14 @@ func (c *CodegenUE5) fieldType(f *CodeStructField) string {
 }
 
 func (c *CodegenUE5) fieldElemType(f *CodeStructField) string {
-	switch f.Type {
+	if f.Type == FieldTypeStruct {
+		return "F" + c.Prefix + pascal(f.StructRef.Name)
+	}
+	return c.fieldPrimitiveType(f.Type)
+}
+
+func (c *CodegenUE5) fieldPrimitiveType(typ FieldType) string {
+	switch typ {
 	case FieldTypeInt:
 		return "int32"
 	case FieldTypeLong:
@@ -146,9 +154,7 @@ func (c *CodegenUE5) fieldElemType(f *CodeStructField) string {
 		return "FDateTime"
 	case FieldTypeJSON:
 		return "TSharedPtr<FJsonValue>"
-	case FieldTypeStruct:
-		return "F" + c.Prefix + pascal(f.StructRef.Name)
 	default:
-		panic("unknown type: " + f.Type)
+		panic("unknown type: " + typ)
 	}
 }

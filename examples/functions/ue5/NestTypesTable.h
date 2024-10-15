@@ -42,6 +42,11 @@ struct FNestTypesTable : public FNestTableBase
         }
     }
 
+    FNestTypes& operator[](int32 ID)
+    {
+        return Rows.FindChecked(FString::FromInt(ID));
+    }
+
     //nestcsv:additional_struct_body_start
     
     //nestcsv:additional_struct_body_end

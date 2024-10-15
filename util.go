@@ -186,6 +186,20 @@ func pascal(s string) string {
 	return strings.Join(tokens, "")
 }
 
+func in(v any, arr ...any) bool {
+	rv := reflect.ValueOf(v)
+	for _, vv := range arr {
+		rvv := reflect.ValueOf(vv)
+		if rv.Kind() == rvv.Kind() && rv.Interface() == rvv.Interface() {
+			return true
+
+		} else if rv.CanConvert(rvv.Type()) && rv.Convert(rvv.Type()).Interface() == vv {
+			return true
+		}
+	}
+	return false
+}
+
 var pluralizeClient = pluralize.NewClient()
 
 func singular(s string) string {
@@ -206,5 +220,6 @@ func initTemplateFuncs() template.FuncMap {
 	m["plural"] = plural
 	m["pascal"] = pascal
 	m["has"] = has
+	m["in"] = in
 	return m
 }

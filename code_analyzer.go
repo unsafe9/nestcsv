@@ -22,6 +22,7 @@ type CodeStruct struct {
 type CodeFile struct {
 	IsTable          bool
 	IsMap            bool
+	IDFieldType      FieldType
 	Name             string
 	Struct           *CodeStruct
 	AnonymousStructs []*CodeStruct
@@ -56,9 +57,10 @@ type codeAnalyzer struct {
 }
 
 type codeAnalyzerTable struct {
-	name     string
-	metadata *TableMetadata
-	fields   []*TableField
+	name        string
+	metadata    *TableMetadata
+	fields      []*TableField
+	idFieldType FieldType
 }
 
 func (a *codeAnalyzer) buildStruct(file *CodeFile, table *codeAnalyzerTable, name string, fields []*TableField) (*CodeStruct, error) {
@@ -150,9 +152,10 @@ func (a *codeAnalyzer) getOrAddNamedStructFile(table *codeAnalyzerTable, name st
 
 func (a *codeAnalyzer) addTableFile(table *codeAnalyzerTable) (*CodeFile, error) {
 	file := &CodeFile{
-		IsTable: true,
-		IsMap:   table.metadata.AsMap,
-		Name:    table.name,
+		IsTable:     true,
+		IsMap:       table.metadata.AsMap,
+		IDFieldType: table.idFieldType,
+		Name:        table.name,
 	}
 	fileStruct, err := a.buildStruct(file, table, table.name, table.fields)
 	if err != nil {
@@ -174,10 +177,12 @@ func AnalyzeTableCode(tableDatas []*TableData, tags []string) (*Code, error) {
 		if len(fields) == 0 {
 			continue
 		}
+		idFieldType, _ := newFieldType(tableData.FieldTypes[TableFieldIndexCol])
 		tables = append(tables, &codeAnalyzerTable{
-			name:     tableData.Name,
-			metadata: tableData.Metadata,
-			fields:   fields,
+			name:        tableData.Name,
+			metadata:    tableData.Metadata,
+			fields:      fields,
+			idFieldType: idFieldType,
 		})
 	}
 

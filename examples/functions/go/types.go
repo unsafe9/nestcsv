@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
@@ -33,6 +34,13 @@ func (t *TypesTable) SheetName() string {
 
 func (t *TypesTable) GetRows() interface{} {
 	return t.Rows
+}
+
+func (t *TypesTable) Get(id int) (*Types, bool) {
+	if row, ok := t.Rows[strconv.Itoa(id)]; ok {
+		return &row, true
+	}
+	return nil, false
 }
 
 func (t *TypesTable) Load(data []byte) error {

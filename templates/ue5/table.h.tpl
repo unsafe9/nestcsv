@@ -64,6 +64,20 @@ struct F{{ $.Prefix }}{{ pascal .Name }}Table : public F{{ $.Prefix }}TableBase
         {{- end }}
     }
 
+    {{- if .IsMap }}
+
+    F{{ $.Prefix }}{{ pascal .Name }}& operator[]({{ fieldPrimitiveType .IDFieldType }} ID)
+    {
+        {{- if eq .IDFieldType "int" }}
+        return Rows.FindChecked(FString::FromInt(ID));
+        {{- else if eq .IDFieldType "long" }}
+        return Rows.FindChecked(FString::Printf(TEXT("%lld"), ID));
+        {{- else }}
+        return Rows.FindChecked(ID);
+        {{- end }}
+    }
+    {{- end }}
+
     //nestcsv:additional_struct_body_start
     {{ default "" $.AdditionalStructBody }}
     //nestcsv:additional_struct_body_end

@@ -8,6 +8,9 @@ import (
     "path/filepath"
     "encoding/json"
     "os"
+{{- if and .IsMap (in .IDFieldType "int" "long") }}
+    "strconv"
+{{- end }}
 {{- end }}
 {{- if has .FieldTypes "time" }}
     "time"
@@ -38,6 +41,22 @@ func (t *{{ pascal .Struct.Name }}Table) SheetName() string {
 func (t *{{ pascal .Struct.Name }}Table) GetRows() interface{} {
     return t.Rows
 }
+
+{{- if .IsMap }}
+
+func (t *{{ pascal .Struct.Name }}Table) Get(id {{ fieldPrimitiveType .IDFieldType }}) (*{{ pascal .Struct.Name }}, bool) {
+    {{- if eq .IDFieldType "int" }}
+    if row, ok := t.Rows[strconv.Itoa(id)]; ok {
+    {{- else if eq .IDFieldType "long" }}
+    if row, ok := t.Rows[strconv.FormatInt(id, 10)]; ok {
+    {{- else }}
+    if row, ok := t.Rows[id]; ok {
+    {{- end }}
+        return &row, true
+    }
+    return nil, false
+}
+{{- end }}
 
 func (t *{{ pascal .Struct.Name }}Table) Load(data []byte) error {
     return json.Unmarshal(data, &t.Rows)
