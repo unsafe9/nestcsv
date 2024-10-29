@@ -26,6 +26,15 @@ func (t *SampleDataTable) GetRows() interface{} {
 	return t.Rows
 }
 
+func (t *SampleDataTable) Find(id int) (*SampleData, bool) {
+	for _, row := range t.Rows {
+		if row.ID == id {
+			return &row, true
+		}
+	}
+	return nil, false
+}
+
 func (t *SampleDataTable) Load(data []byte) error {
 	return json.Unmarshal(data, &t.Rows)
 }

@@ -16,12 +16,15 @@ struct FNestComplex : public FNestTableDataBase
 {
     GENERATED_BODY()
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    int32 ID;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TArray<FString> Tags;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TArray<FNestSKU> SKU;
 
     virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) override
     {
+        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("ID"), ID);
         const TArray<TSharedPtr<FJsonValue>>* TagsArray = nullptr;
         if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("Tags"), TagsArray))
         {

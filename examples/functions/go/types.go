@@ -36,7 +36,7 @@ func (t *TypesTable) GetRows() interface{} {
 	return t.Rows
 }
 
-func (t *TypesTable) Get(id int) (*Types, bool) {
+func (t *TypesTable) Find(id int) (*Types, bool) {
 	if row, ok := t.Rows[strconv.Itoa(id)]; ok {
 		return &row, true
 	}

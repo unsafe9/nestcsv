@@ -31,6 +31,15 @@ func (t *ComplexTable) GetRows() interface{} {
 	return t.Rows
 }
 
+func (t *ComplexTable) Find(id int) (*Complex, bool) {
+	for _, row := range t.Rows {
+		if row.ID == id {
+			return &row, true
+		}
+	}
+	return nil, false
+}
+
 func (t *ComplexTable) Load(data []byte) error {
 	return json.Unmarshal(data, &t.Rows)
 }

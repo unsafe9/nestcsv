@@ -42,6 +42,18 @@ struct FNestComplexTable : public FNestTableBase
         }
     }
 
+    const FNestComplex* Find(int32 ID) const
+    {
+        return Rows.FindByPredicate([ID](const FNestComplex& Row) { return Row.ID == ID; });
+    }
+                        
+    const FNestComplex& FindChecked(int32 ID) const
+    {
+        const FNestComplex* Row = Find(ID);
+        check(Row != nullptr);
+        return *Row;
+    }
+
     //nestcsv:additional_struct_body_start
     void CustomFunction()
     {
