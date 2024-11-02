@@ -50,22 +50,26 @@ Run the following command:
 ```bash
 nestcsv
 
-# specify the config file
+# specify your config file
 nestcsv -c ../config/config.yaml
 ```
 
 ## How to structure the schema
 See [examples](./examples)
 
-## 0.0.2 Roadmap
+## Roadmap
 ### Docs
-- [ ] Add a schema structure guide
+- [ ] Add a csv(datasource) schema structure guide
 - [ ] Add an example of UE5 json file loading
 ### Datasource
-- [ ] Add Google OAuth2 authentication for Google Apps Script
-- [ ] Integrate spreadsheet datasource using the Sheets API
+- [ ] Implement Google OAuth2 authentication for Google Apps Script
+- [ ] Integrate spreadsheet datasource using Sheets API
 ### Config
 - [ ] Extract time format settings into the configuration file
+### Output
+- [ ] Generate SQL dump file
 ### Code generation
-- [ ] Protobuf schema generation
-- [ ] TypeScript code generation
+- [ ] Generate Protobuf schema
+- [ ] Generate Node.js code with type definitions
+- [ ] Generate PostgreSQL DDL
+- [ ] Generate MySQL DDL
