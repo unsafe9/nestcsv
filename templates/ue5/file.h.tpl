@@ -8,9 +8,10 @@
 #include "{{ $.Prefix }}{{ pascal .Name }}.h"
 {{- end }}
 
-//nestcsv:additional_include_start
-{{ default "" $.AdditionalInclude }}
-//nestcsv:additional_include_end
+{{ $extraInclude := list $.Prefix .Name "_EXTRA_INCLUDE" | join "" | upper -}}
+//NESTCSV:{{ $extraInclude }}_START
+{{ index $.ExistingContent $extraInclude | default "" }}
+//NESTCSV:{{ $extraInclude }}_END
 
 #include "{{ $.Prefix }}{{ pascal .Name }}.generated.h"
 {{ range append .AnonymousStructs .Struct }}
@@ -100,9 +101,10 @@ struct F{{ $.Prefix }}{{ pascal .Name }} : public F{{ $.Prefix }}TableDataBase
         {{- end }}
     }
 
-    //nestcsv:additional_struct_body_start
-    {{ default "" $.AdditionalStructBody }}
-    //nestcsv:additional_struct_body_end
+    {{ $extraBody := list $.Prefix .Name "_EXTRA_BODY" | join "" | upper -}}
+    //NESTCSV:{{ $extraBody }}_START
+    {{ index $.ExistingContent $extraBody | default "" }}
+    //NESTCSV:{{ $extraBody }}_END
 };
 {{ end }}
 {{- end -}}

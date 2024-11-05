@@ -7,9 +7,10 @@
 #include "{{ $.Prefix }}TableBase.h"
 #include "{{ $.Prefix }}{{ pascal .Name }}.h"
 
-//nestcsv:additional_include_start
-{{ default "" $.AdditionalInclude }}
-//nestcsv:additional_include_end
+{{ $extraInclude := list $.Prefix .Name "_EXTRA_INCLUDE" | join "" | upper -}}
+//NESTCSV:{{ $extraInclude }}_START
+{{ index $.ExistingContent $extraInclude | default "" }}
+//NESTCSV:{{ $extraInclude }}_END
 
 #include "{{ $.Prefix }}{{ pascal .Name }}Table.generated.h"
 
@@ -87,8 +88,9 @@ struct F{{ $.Prefix }}{{ pascal .Name }}Table : public F{{ $.Prefix }}TableBase
         return *Row;
     }
 
-    //nestcsv:additional_struct_body_start
-    {{ default "" $.AdditionalStructBody }}
-    //nestcsv:additional_struct_body_end
+    {{ $extraBody := list $.Prefix .Name "_EXTRA_BODY" | join "" | upper -}}
+    //NESTCSV:{{ $extraBody }}_START
+    {{ index $.ExistingContent $extraBody | default "" }}
+    //NESTCSV:{{ $extraBody }}_END
 };
 {{- end -}}

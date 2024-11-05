@@ -4,9 +4,9 @@
 
 #include "NestTableDataBase.h"
 
-//nestcsv:additional_include_start
+//NESTCSV:NESTTYPES_EXTRA_INCLUDE_START
 
-//nestcsv:additional_include_end
+//NESTCSV:NESTTYPES_EXTRA_INCLUDE_END
 
 #include "NestTypes.generated.h"
 
@@ -115,7 +115,7 @@ struct FNestTypes : public FNestTableDataBase
         }
     }
 
-    //nestcsv:additional_struct_body_start
+    //NESTCSV:NESTTYPES_EXTRA_BODY_START
     
-    //nestcsv:additional_struct_body_end
+    //NESTCSV:NESTTYPES_EXTRA_BODY_END
 };

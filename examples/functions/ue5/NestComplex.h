@@ -5,9 +5,9 @@
 #include "NestTableDataBase.h"
 #include "NestSKU.h"
 
-//nestcsv:additional_include_start
+//NESTCSV:NESTCOMPLEX_EXTRA_INCLUDE_START
 #include "CustomInclude.h"
-//nestcsv:additional_include_end
+//NESTCSV:NESTCOMPLEX_EXTRA_INCLUDE_END
 
 #include "NestComplex.generated.h"
 
@@ -53,10 +53,10 @@ struct FNestComplex : public FNestTableDataBase
         }
     }
 
-    //nestcsv:additional_struct_body_start
+    //NESTCSV:NESTCOMPLEX_EXTRA_BODY_START
     void CustomFunction()
     {
         // Custom function body
     }
-    //nestcsv:additional_struct_body_end
+    //NESTCSV:NESTCOMPLEX_EXTRA_BODY_END
 };

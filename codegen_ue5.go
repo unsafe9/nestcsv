@@ -46,7 +46,7 @@ func (c *CodegenUE5) Generate(code *Code) error {
 	return nil
 }
 
-func (c *CodegenUE5) readExistingFileRegions(fileName string) (map[string]any, error) {
+func (c *CodegenUE5) readExistingFileContent(fileName string) (map[string]any, error) {
 	filePath := makeFilePath(c.RootDir, c.Prefix+fileName, filepath.Ext(fileName))
 	file, err := os.ReadFile(filePath)
 	if err != nil {
@@ -58,7 +58,7 @@ func (c *CodegenUE5) readExistingFileRegions(fileName string) (map[string]any, e
 
 	var (
 		lineBreak         = []byte("\n")
-		regionStartRegexp = regexp.MustCompile(`\s*//\s*nestcsv:(\w+)_start`)
+		regionStartRegexp = regexp.MustCompile(`\s*//\s*NESTCSV:(\w+)_START`)
 		regionEndRegexp   *regexp.Regexp
 		regions           = make(map[string]any)
 		region            string
@@ -68,12 +68,12 @@ func (c *CodegenUE5) readExistingFileRegions(fileName string) (map[string]any, e
 	for _, line := range lines {
 		if matches := regionStartRegexp.FindSubmatch(line); len(matches) > 1 {
 			region = string(matches[1])
-			regionEndRegexp = regexp.MustCompile(`\s*//\s*nestcsv:` + region + `_end`)
+			regionEndRegexp = regexp.MustCompile(`\s*//\s*NESTCSV:` + region + `_END`)
 			builder.Reset()
 
 		} else if region != "" {
 			if regionEndRegexp.Match(line) {
-				regions[pascal(region)] = strings.TrimSpace(builder.String())
+				regions[region] = strings.TrimSpace(builder.String())
 				region = ""
 
 			} else {
@@ -87,10 +87,12 @@ func (c *CodegenUE5) readExistingFileRegions(fileName string) (map[string]any, e
 
 func (c *CodegenUE5) template(fileName, templateName string, withRegions bool, values map[string]any) error {
 	if withRegions {
-		if regions, err := c.readExistingFileRegions(fileName); err != nil {
+		if existingContent, err := c.readExistingFileContent(fileName); err != nil {
 			return err
 		} else {
-			values = extendMap(values, regions)
+			values = extendMap(values, map[string]any{
+				"ExistingContent": existingContent,
+			})
 		}
 	}
 
