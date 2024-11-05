@@ -25,5 +25,6 @@ struct FNestTableBase
         }
     }
 
+protected:
     virtual void OnLoad() {}
 };

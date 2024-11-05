@@ -25,5 +25,6 @@ struct F{{ .Prefix }}TableBase
         }
     }
 
+protected:
     virtual void OnLoad() {}
 };
