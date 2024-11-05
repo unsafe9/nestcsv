@@ -24,4 +24,6 @@ struct F{{ .Prefix }}TableBase
             Load(JsonValue);
         }
     }
+
+    virtual void OnLoad() {}
 };

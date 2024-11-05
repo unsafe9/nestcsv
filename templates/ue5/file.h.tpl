@@ -99,6 +99,8 @@ struct F{{ $.Prefix }}{{ pascal .Name }} : public F{{ $.Prefix }}TableDataBase
         }
         {{- end }}
         {{- end }}
+
+        OnLoad();
     }
 
     {{ $extraBody := list $.Prefix .Name "_EXTRA_BODY" | join "" | upper -}}

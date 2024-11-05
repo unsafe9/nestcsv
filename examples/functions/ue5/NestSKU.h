@@ -23,6 +23,8 @@ struct FNestSKU : public FNestTableDataBase
     {
         JsonObject.ToSharedRef()->TryGetStringField(TEXT("Type"), Type);
         JsonObject.ToSharedRef()->TryGetStringField(TEXT("ID"), ID);
+
+        OnLoad();
     }
 
     //NESTCSV:NESTSKU_EXTRA_BODY_START

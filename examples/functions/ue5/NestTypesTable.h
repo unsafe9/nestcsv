@@ -40,6 +40,8 @@ struct FNestTypesTable : public FNestTableBase
                 }
             }
         }
+
+        OnLoad();
     }
 
     const FNestTypes* Find(int32 ID) const

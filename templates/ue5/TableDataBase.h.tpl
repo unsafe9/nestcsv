@@ -23,4 +23,6 @@ struct F{{ .Prefix }}TableDataBase
             Load(JsonObject);
         }
     }
+
+    virtual void OnLoad() {}
 };

@@ -113,6 +113,8 @@ struct FNestTypes : public FNestTableDataBase
                 }
             }
         }
+
+        OnLoad();
     }
 
     //NESTCSV:NESTTYPES_EXTRA_BODY_START

@@ -64,6 +64,8 @@ struct F{{ $.Prefix }}{{ pascal .Name }}Table : public F{{ $.Prefix }}TableBase
             }
         }
         {{- end }}
+
+        OnLoad();
     }
 
     const F{{ $.Prefix }}{{ pascal .Name }}* Find({{ fieldPrimitiveType $idField.Type }} ID) const

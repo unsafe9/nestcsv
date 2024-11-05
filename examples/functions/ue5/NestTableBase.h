@@ -24,4 +24,6 @@ struct FNestTableBase
             Load(JsonValue);
         }
     }
+
+    virtual void OnLoad() {}
 };

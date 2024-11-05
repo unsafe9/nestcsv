@@ -40,6 +40,8 @@ struct FNestComplexTable : public FNestTableBase
                 }
             }
         }
+
+        OnLoad();
     }
 
     const FNestComplex* Find(int32 ID) const

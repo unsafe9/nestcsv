@@ -23,4 +23,6 @@ struct FNestTableDataBase
             Load(JsonObject);
         }
     }
+
+    virtual void OnLoad() {}
 };

@@ -51,6 +51,8 @@ struct FNestComplex : public FNestTableDataBase
                 }
             }
         }
+
+        OnLoad();
     }
 
     //NESTCSV:NESTCOMPLEX_EXTRA_BODY_START
