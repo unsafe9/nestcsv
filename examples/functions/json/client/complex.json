@@ -1,6 +1,5 @@
 [
   {
-    "ID": 1,
     "SKU": [
       {
         "ID": "IAP_Google_1",
@@ -13,7 +12,6 @@
     ]
   },
   {
-    "ID": 2,
     "SKU": [
       {
         "ID": "IAP_Google_2",

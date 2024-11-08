@@ -26,7 +26,7 @@ func (p *TableParser) ParseTableFields(tags []string) ([]*TableField, error) {
 	)
 
 	for col := 0; col < td.Columns; col++ {
-		if col > TableFieldIndexCol && !containsAny(tags, td.FieldTags[col]...) {
+		if !containsAny(tags, td.FieldTags[col]...) {
 			continue
 		}
 

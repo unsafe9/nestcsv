@@ -27,6 +27,8 @@ type CodeFile struct {
 	AnonymousStructs []*CodeStruct
 	FileRefs         []*CodeFile
 	FieldTypes       []FieldType
+	IDField          *CodeStructField
+	IDFieldType      FieldType // this will be set even if IDField is nil
 }
 
 type Code struct {
@@ -56,9 +58,11 @@ type codeAnalyzer struct {
 }
 
 type codeAnalyzerTable struct {
-	name     string
-	metadata *TableMetadata
-	fields   []*TableField
+	name        string
+	metadata    *TableMetadata
+	fields      []*TableField
+	idField     *TableField
+	idFieldType FieldType
 }
 
 func (a *codeAnalyzer) buildStruct(file *CodeFile, table *codeAnalyzerTable, name string, fields []*TableField) (*CodeStruct, error) {
@@ -150,15 +154,20 @@ func (a *codeAnalyzer) getOrAddNamedStructFile(table *codeAnalyzerTable, name st
 
 func (a *codeAnalyzer) addTableFile(table *codeAnalyzerTable) (*CodeFile, error) {
 	file := &CodeFile{
-		IsTable: true,
-		IsMap:   table.metadata.AsMap,
-		Name:    table.name,
+		IsTable:     true,
+		IsMap:       table.metadata.AsMap,
+		Name:        table.name,
+		IDFieldType: table.idFieldType,
 	}
 	fileStruct, err := a.buildStruct(file, table, table.name, table.fields)
 	if err != nil {
 		return nil, err
 	}
 	file.Struct = fileStruct
+
+	if table.idField != nil {
+		file.IDField = fileStruct.Fields[0]
+	}
 
 	a.tableFiles[table.name] = file
 	return file, nil
@@ -174,10 +183,22 @@ func AnalyzeTableCode(tableDatas []*TableData, tags []string) (*Code, error) {
 		if len(fields) == 0 {
 			continue
 		}
+		var (
+			idField     *TableField
+			idFieldType FieldType
+		)
+		if tableData.FieldNames[TableFieldIndexCol] == fields[TableFieldIndexCol].Name {
+			idField = fields[TableFieldIndexCol]
+			idFieldType = idField.Type
+		} else {
+			idFieldType, _ = newFieldType(tableData.FieldTypes[TableFieldIndexCol])
+		}
 		tables = append(tables, &codeAnalyzerTable{
-			name:     tableData.Name,
-			metadata: tableData.Metadata,
-			fields:   fields,
+			name:        tableData.Name,
+			metadata:    tableData.Metadata,
+			fields:      fields,
+			idField:     idField,
+			idFieldType: idFieldType,
 		})
 	}
 
