@@ -1,7 +1,6 @@
 package nestcsv
 
 import (
-	"iter"
 	"strings"
 )
 
@@ -106,22 +105,20 @@ func (f *TableField) structEqual(other *TableField, top bool) bool {
 	return true
 }
 
-func (f *TableField) Iterate() iter.Seq[*TableField] {
-	return func(yield func(*TableField) bool) {
-		var iterate func(f *TableField) bool
-		iterate = func(f *TableField) bool {
-			if yield(f) {
-				for _, structField := range f.StructFields {
-					if !iterate(structField) {
-						return false
-					}
+func (f *TableField) Iterate(yield func(*TableField) bool) {
+	var iterate func(f *TableField) bool
+	iterate = func(f *TableField) bool {
+		if yield(f) {
+			for _, structField := range f.StructFields {
+				if !iterate(structField) {
+					return false
 				}
-				return true
 			}
-			return false
+			return true
 		}
-		iterate(f)
+		return false
 	}
+	iterate(f)
 }
 
 func (f *TableField) Clone() *TableField {

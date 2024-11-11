@@ -96,7 +96,7 @@ func (p *TableParser) Marshal(fields []*TableField) (any, error) {
 		multiLineArrayExists = nil != findPtr(
 			fields,
 			func(field *TableField) bool {
-				for f := range field.Iterate() {
+				for f := range field.Iterate {
 					if f.IsMultiLineArray {
 						return true
 					}
@@ -279,7 +279,7 @@ func (p *TableParser) parseGoValue(typ FieldType, cell string) (any, error) {
 }
 
 func (p *TableParser) checkAllCellsEmpty(field *TableField, row []string) bool {
-	for f := range field.Iterate() {
+	for f := range field.Iterate {
 		if row[f.column] != "" {
 			return false
 		}

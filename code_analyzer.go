@@ -2,7 +2,6 @@ package nestcsv
 
 import (
 	"fmt"
-	"iter"
 	"sort"
 	"strings"
 )
@@ -36,17 +35,15 @@ type Code struct {
 	NamedStructs []*CodeFile
 }
 
-func (c *Code) Files() iter.Seq[*CodeFile] {
-	return func(yield func(*CodeFile) bool) {
-		for _, file := range c.NamedStructs {
-			if !yield(file) {
-				return
-			}
+func (c *Code) Files(yield func(*CodeFile) bool) {
+	for _, file := range c.NamedStructs {
+		if !yield(file) {
+			return
 		}
-		for _, file := range c.Tables {
-			if !yield(file) {
-				return
-			}
+	}
+	for _, file := range c.Tables {
+		if !yield(file) {
+			return
 		}
 	}
 }

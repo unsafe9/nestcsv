@@ -27,7 +27,7 @@ func (c *CodegenGo) Generate(code *Code) error {
 		return err
 	}
 
-	for file := range code.Files() {
+	for file := range code.Files {
 		values := map[string]any{
 			"File": file,
 		}
