@@ -30,41 +30,39 @@ struct F{{ $.Prefix }}{{ pascal .Name }}Table : public F{{ $.Prefix }}TableBase
         return TEXT("{{ .Name }}");
     }
 
-    virtual void Load(const TSharedPtr<FJsonValue>& JsonValue) override
+    virtual bool Load(const TSharedPtr<FJsonValue>& JsonValue) override
     {
+        if (!JsonValue.IsValid()) return false;
         {{- if .IsMap }}
+        TMap<FString, F{{ $.Prefix }}{{ pascal .Name }}> _Result;
+
         const TSharedPtr<FJsonObject>* RowsMap = nullptr;
-        if (JsonValue->TryGetObject(RowsMap))
+        if (!JsonValue->TryGetObject(RowsMap)) return false;
+        for (const auto& Row : (*RowsMap)->Values)
         {
-            for (const auto& Row : (*RowsMap)->Values)
-            {
-                const TSharedPtr<FJsonObject> *RowValue = nullptr;
-                if (Row.Value->TryGetObject(RowValue))
-                {
-                    F{{ $.Prefix }}{{ pascal .Name }} RowItem;
-                    RowItem.Load(*RowValue);
-                    Rows.Add(Row.Key, RowItem);
-                }
-            }
+            const TSharedPtr<FJsonObject> *RowValue = nullptr;
+            if (!Row.Value->TryGetObject(RowValue)) return false;
+            F{{ $.Prefix }}{{ pascal .Name }} RowItem;
+            if (!RowItem.Load(*RowValue)) return false;
+            _Result.Add(Row.Key, RowItem);
         }
         {{- else }}
+        TArray<F{{ $.Prefix }}{{ pascal .Name }}> _Result;
+
         const TArray<TSharedPtr<FJsonValue>>* RowsArray = nullptr;
-        if (JsonValue->TryGetArray(RowsArray))
+        if (!JsonValue->TryGetArray(RowsArray)) return false;
+        for (const auto& Row : *RowsArray)
         {
-            for (const auto& Row : *RowsArray)
-            {
-                const TSharedPtr<FJsonObject> *RowValue = nullptr;
-                if (Row->TryGetObject(RowValue))
-                {
-                    F{{ $.Prefix }}{{ pascal .Name }} RowItem;
-                    RowItem.Load(*RowValue);
-                    Rows.Add(RowItem);
-                }
-            }
+            const TSharedPtr<FJsonObject> *RowValue = nullptr;
+            if (!Row->TryGetObject(RowValue)) return false;
+            F{{ $.Prefix }}{{ pascal .Name }} RowItem;
+            if (!RowItem.Load(*RowValue)) return false;
+            _Result.Add(RowItem);
         }
         {{- end }}
 
-        OnLoad();
+        Rows = MoveTemp(_Result);
+        return true;
     }
 {{- if or .IDField .IsMap }}
 

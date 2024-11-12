@@ -20,36 +20,36 @@ struct FNestComplex : public FNestTableDataBase
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TArray<FNestSKU> SKU;
 
-    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) override
+    virtual bool Load(const TSharedPtr<FJsonObject>& JsonObject) override
     {
-        const TArray<TSharedPtr<FJsonValue>>* TagsArray = nullptr;
-        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("Tags"), TagsArray))
+        if (!JsonObject.IsValid()) return false;
+        FNestComplex _Result;
+
         {
+            const TArray<TSharedPtr<FJsonValue>>* TagsArray = nullptr;
+            if (!JsonObject.ToSharedRef()->TryGetArrayField(TEXT("Tags"), TagsArray)) return false;
             for (const auto& Item : *TagsArray)
             {
                 FString FieldItem;
-                if (Item->TryGetString(FieldItem))
-                {
-                    Tags.Add(FieldItem);
-                }
+                if (!Item->TryGetString(FieldItem)) return false;
+                _Result.Tags.Add(FieldItem);
             }
         }
-        const TArray<TSharedPtr<FJsonValue>>* SKUArray = nullptr;
-        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("SKU"), SKUArray))
         {
+            const TArray<TSharedPtr<FJsonValue>>* SKUArray = nullptr;
+            if (!JsonObject.ToSharedRef()->TryGetArrayField(TEXT("SKU"), SKUArray)) return false;
             for (const auto& Item : *SKUArray)
             {
                 const TSharedPtr<FJsonObject> *ObjPtr = nullptr;
-                if (Item->TryGetObject(ObjPtr))
-                {
-                    FNestSKU FieldItem;
-                    FieldItem.Load(*ObjPtr);
-                    SKU.Add(FieldItem);
-                }
+                if (!Item->TryGetObject(ObjPtr)) return false;
+                FNestSKU FieldItem;
+                FieldItem.Load(*ObjPtr);
+                _Result.SKU.Add(FieldItem);
             }
         }
 
-        OnLoad();
+        *this = MoveTemp(_Result);
+        return true;
     }
 
     //NESTCSV:NESTCOMPLEX_EXTRA_BODY_START

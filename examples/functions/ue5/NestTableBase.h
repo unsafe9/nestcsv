@@ -14,17 +14,15 @@ struct FNestTableBase
     virtual ~FNestTableBase() {}
 
     virtual FString GetSheetName() const { return TEXT(""); }
-    virtual void Load(const TSharedPtr<FJsonValue>& JsonValue) {}
-    virtual void Load(const FString& JsonString)
+    virtual bool Load(const TSharedPtr<FJsonValue>& JsonValue) { return false; }
+    virtual bool Load(const FString& JsonString)
     {
         TSharedPtr<FJsonValue> JsonValue;
         TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(JsonString);
         if (FJsonSerializer::Deserialize(JsonReader, JsonValue) && JsonValue.IsValid())
         {
-            Load(JsonValue);
+            return Load(JsonValue);
         }
+        return false;
     }
-
-protected:
-    virtual void OnLoad() {}
 };

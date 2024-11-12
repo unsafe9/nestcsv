@@ -37,84 +37,76 @@ struct FNestTypes : public FNestTableDataBase
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TArray<FDateTime> TimeArray;
 
-    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) override
+    virtual bool Load(const TSharedPtr<FJsonObject>& JsonObject) override
     {
-        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Int"), Int);
-        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Long"), Long);
-        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Float"), Float);
-        JsonObject.ToSharedRef()->TryGetStringField(TEXT("String"), String);
-        FString TimeDtStr;
-        if (JsonObject.ToSharedRef()->TryGetStringField(TEXT("Time"), TimeDtStr))
+        if (!JsonObject.IsValid()) return false;
+        FNestTypes _Result;
+
+        if (!JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Int"), _Result.Int)) return false;
+        if (!JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Long"), _Result.Long)) return false;
+        if (!JsonObject.ToSharedRef()->TryGetNumberField(TEXT("Float"), _Result.Float)) return false;
+        if (!JsonObject.ToSharedRef()->TryGetStringField(TEXT("String"), _Result.String)) return false;
         {
-            FDateTime::ParseIso8601(*TimeDtStr, Time);
+            FString TimeDtStr;
+            if (!JsonObject.ToSharedRef()->TryGetStringField(TEXT("Time"), TimeDtStr)) return false;
+            if (!FDateTime::ParseIso8601(*TimeDtStr, _Result.Time)) return false;
         }
-        JsonObject.ToSharedRef()->TryGetField(TEXT("Json"), Json);
-        const TArray<TSharedPtr<FJsonValue>>* IntArrayArray = nullptr;
-        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("IntArray"), IntArrayArray))
+        if (!JsonObject.ToSharedRef()->TryGetField(TEXT("Json"), _Result.Json)) return false;
         {
+            const TArray<TSharedPtr<FJsonValue>>* IntArrayArray = nullptr;
+            if (!JsonObject.ToSharedRef()->TryGetArrayField(TEXT("IntArray"), IntArrayArray)) return false;
             for (const auto& Item : *IntArrayArray)
             {
                 int32 FieldItem;
-                if (Item->TryGetNumber(FieldItem))
-                {
-                    IntArray.Add(FieldItem);
-                }
+                if (!Item->TryGetNumber(FieldItem)) return false;
+                _Result.IntArray.Add(FieldItem);
             }
         }
-        const TArray<TSharedPtr<FJsonValue>>* LongArrayArray = nullptr;
-        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("LongArray"), LongArrayArray))
         {
+            const TArray<TSharedPtr<FJsonValue>>* LongArrayArray = nullptr;
+            if (!JsonObject.ToSharedRef()->TryGetArrayField(TEXT("LongArray"), LongArrayArray)) return false;
             for (const auto& Item : *LongArrayArray)
             {
                 int64 FieldItem;
-                if (Item->TryGetNumber(FieldItem))
-                {
-                    LongArray.Add(FieldItem);
-                }
+                if (!Item->TryGetNumber(FieldItem)) return false;
+                _Result.LongArray.Add(FieldItem);
             }
         }
-        const TArray<TSharedPtr<FJsonValue>>* FloatArrayArray = nullptr;
-        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("FloatArray"), FloatArrayArray))
         {
+            const TArray<TSharedPtr<FJsonValue>>* FloatArrayArray = nullptr;
+            if (!JsonObject.ToSharedRef()->TryGetArrayField(TEXT("FloatArray"), FloatArrayArray)) return false;
             for (const auto& Item : *FloatArrayArray)
             {
                 double FieldItem;
-                if (Item->TryGetNumber(FieldItem))
-                {
-                    FloatArray.Add(FieldItem);
-                }
+                if (!Item->TryGetNumber(FieldItem)) return false;
+                _Result.FloatArray.Add(FieldItem);
             }
         }
-        const TArray<TSharedPtr<FJsonValue>>* StringArrayArray = nullptr;
-        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("StringArray"), StringArrayArray))
         {
+            const TArray<TSharedPtr<FJsonValue>>* StringArrayArray = nullptr;
+            if (!JsonObject.ToSharedRef()->TryGetArrayField(TEXT("StringArray"), StringArrayArray)) return false;
             for (const auto& Item : *StringArrayArray)
             {
                 FString FieldItem;
-                if (Item->TryGetString(FieldItem))
-                {
-                    StringArray.Add(FieldItem);
-                }
+                if (!Item->TryGetString(FieldItem)) return false;
+                _Result.StringArray.Add(FieldItem);
             }
         }
-        const TArray<TSharedPtr<FJsonValue>>* TimeArrayArray = nullptr;
-        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("TimeArray"), TimeArrayArray))
         {
+            const TArray<TSharedPtr<FJsonValue>>* TimeArrayArray = nullptr;
+            if (!JsonObject.ToSharedRef()->TryGetArrayField(TEXT("TimeArray"), TimeArrayArray)) return false;
             for (const auto& Item : *TimeArrayArray)
             {
                 FString DateTimeStr;
-                if (Item->TryGetString(DateTimeStr))
-                {
-                    FDateTime DateTime;
-                    if (FDateTime::ParseIso8601(DateTimeStr, DateTime))
-                    {
-                        TimeArray.Add(DateTime);
-                    }
-                }
+                if (!Item->TryGetString(DateTimeStr)) return false;
+                FDateTime DateTime;
+                if (!FDateTime::ParseIso8601(DateTimeStr, DateTime)) return false;
+                _Result.TimeArray.Add(DateTime);
             }
         }
 
-        OnLoad();
+        *this = MoveTemp(_Result);
+        return true;
     }
 
     //NESTCSV:NESTTYPES_EXTRA_BODY_START

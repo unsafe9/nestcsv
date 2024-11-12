@@ -25,82 +25,78 @@ struct F{{ $.Prefix }}{{ pascal .Name }} : public F{{ $.Prefix }}TableDataBase
     {{ fieldType . }} {{ .Name }};
     {{- end }}
 
-    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) override
+    virtual bool Load(const TSharedPtr<FJsonObject>& JsonObject) override
     {
+        if (!JsonObject.IsValid()) return false;
+        F{{ $.Prefix }}{{ pascal .Name }} _Result;
+{{/**/}}
         {{- range .Fields }}
         {{- if .IsArray }}
-        const TArray<TSharedPtr<FJsonValue>>* {{ .Name }}Array = nullptr;
-        if (JsonObject.ToSharedRef()->TryGetArrayField(TEXT("{{ .Name }}"), {{ .Name }}Array))
         {
+            const TArray<TSharedPtr<FJsonValue>>* {{ .Name }}Array = nullptr;
+            if (!JsonObject.ToSharedRef()->TryGetArrayField(TEXT("{{ .Name }}"), {{ .Name }}Array)) return false;
             for (const auto& Item : *{{ .Name }}Array)
             {
                 {{- if eq .Type "time" }}
                 FString DateTimeStr;
-                if (Item->TryGetString(DateTimeStr))
-                {
-                    FDateTime DateTime;
-                    if (FDateTime::ParseIso8601(DateTimeStr, DateTime))
-                    {
-                        {{ .Name }}.Add(DateTime);
-                    }
-                }
+                if (!Item->TryGetString(DateTimeStr)) return false;
+                FDateTime DateTime;
+                if (!FDateTime::ParseIso8601(DateTimeStr, DateTime)) return false;
+                _Result.{{ .Name }}.Add(DateTime);
                 {{- else if eq .Type "json" }}
-                {{ .Name }}.Add(Item);
+                _Result.{{ .Name }}.Add(Item);
                 {{- else if eq .Type "struct" }}
                 const TSharedPtr<FJsonObject> *ObjPtr = nullptr;
-                if (Item->TryGetObject(ObjPtr))
-                {
-                    {{ fieldElemType . }} FieldItem;
-                    FieldItem.Load(*ObjPtr);
-                    {{ .Name }}.Add(FieldItem);
-                }
+                if (!Item->TryGetObject(ObjPtr)) return false;
+                {{ fieldElemType . }} FieldItem;
+                FieldItem.Load(*ObjPtr);
+                _Result.{{ .Name }}.Add(FieldItem);
                 {{- else }}
                 {{ fieldElemType . }} FieldItem;
                 {{- if eq .Type "int" }}
-                if (Item->TryGetNumber(FieldItem))
+                if (!Item->TryGetNumber(FieldItem)) return false;
                 {{- else if eq .Type "long" }}
-                if (Item->TryGetNumber(FieldItem))
+                if (!Item->TryGetNumber(FieldItem)) return false;
                 {{- else if eq .Type "float" }}
-                if (Item->TryGetNumber(FieldItem))
+                if (!Item->TryGetNumber(FieldItem)) return false;
                 {{- else if eq .Type "bool" }}
-                if (Item->TryGetBool(FieldItem))
+                if (!Item->TryGetBool(FieldItem)) return false;
                 {{- else if eq .Type "string" }}
-                if (Item->TryGetString(FieldItem))
+                if (!Item->TryGetString(FieldItem)) return false;
                 {{- end }}
-                {
-                    {{ .Name }}.Add(FieldItem);
-                }
+                _Result.{{ .Name }}.Add(FieldItem);
                 {{- end }}
             }
         }
         {{- else if eq .Type "int" }}
-        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("{{ .Name }}"), {{ .Name }});
+        if (!JsonObject.ToSharedRef()->TryGetNumberField(TEXT("{{ .Name }}"), _Result.{{ .Name }})) return false;
         {{- else if eq .Type "long" }}
-        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("{{ .Name }}"), {{ .Name }});
+        if (!JsonObject.ToSharedRef()->TryGetNumberField(TEXT("{{ .Name }}"), _Result.{{ .Name }})) return false;
         {{- else if eq .Type "float" }}
-        JsonObject.ToSharedRef()->TryGetNumberField(TEXT("{{ .Name }}"), {{ .Name }});
+        if (!JsonObject.ToSharedRef()->TryGetNumberField(TEXT("{{ .Name }}"), _Result.{{ .Name }})) return false;
         {{- else if eq .Type "bool" }}
-        JsonObject.ToSharedRef()->TryGetBoolField(TEXT("{{ .Name }}"), {{ .Name }});
+        if (!JsonObject.ToSharedRef()->TryGetBoolField(TEXT("{{ .Name }}"), _Result.{{ .Name }})) return false;
         {{- else if eq .Type "string" }}
-        JsonObject.ToSharedRef()->TryGetStringField(TEXT("{{ .Name }}"), {{ .Name }});
+        if (!JsonObject.ToSharedRef()->TryGetStringField(TEXT("{{ .Name }}"), _Result.{{ .Name }})) return false;
         {{- else if eq .Type "time" }}
-        FString {{ .Name }}DtStr;
-        if (JsonObject.ToSharedRef()->TryGetStringField(TEXT("{{ .Name }}"), {{ .Name }}DtStr))
         {
-            FDateTime::ParseIso8601(*{{ .Name }}DtStr, {{ .Name }});
+            FString {{ .Name }}DtStr;
+            if (!JsonObject.ToSharedRef()->TryGetStringField(TEXT("{{ .Name }}"), {{ .Name }}DtStr)) return false;
+            if (!FDateTime::ParseIso8601(*{{ .Name }}DtStr, _Result.{{ .Name }})) return false;
         }
         {{- else if eq .Type "json" }}
-        JsonObject.ToSharedRef()->TryGetField(TEXT("{{ .Name }}"), {{ .Name }});
+        if (!JsonObject.ToSharedRef()->TryGetField(TEXT("{{ .Name }}"), _Result.{{ .Name }})) return false;
         {{- else if eq .Type "struct" }}
-        const TSharedPtr<FJsonObject> *{{ .Name }}ObjPtr = nullptr;
-        if (JsonObject.ToSharedRef()->TryGetObjectField(TEXT("{{ .Name }}"), {{ .Name }}ObjPtr))
         {
-            {{ .Name }}.Load(*{{ .Name }}ObjPtr);
+            const TSharedPtr<FJsonObject> *{{ .Name }}ObjPtr = nullptr;
+            if (!JsonObject.ToSharedRef()->TryGetObjectField(TEXT("{{ .Name }}"), {{ .Name }}ObjPtr)) return false;
+            _Result.{{ .Name }}.Load(*{{ .Name }}ObjPtr);
         }
         {{- end }}
         {{- end }}
 
-        OnLoad();
+        *this = MoveTemp(_Result);
+        return true;
     }
 
     {{ $extraBody := list $.Prefix .Name "_EXTRA_BODY" | join "" | upper -}}

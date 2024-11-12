@@ -24,24 +24,24 @@ struct FNestTypesTable : public FNestTableBase
         return TEXT("types");
     }
 
-    virtual void Load(const TSharedPtr<FJsonValue>& JsonValue) override
+    virtual bool Load(const TSharedPtr<FJsonValue>& JsonValue) override
     {
+        if (!JsonValue.IsValid()) return false;
+        TMap<FString, FNestTypes> _Result;
+
         const TSharedPtr<FJsonObject>* RowsMap = nullptr;
-        if (JsonValue->TryGetObject(RowsMap))
+        if (!JsonValue->TryGetObject(RowsMap)) return false;
+        for (const auto& Row : (*RowsMap)->Values)
         {
-            for (const auto& Row : (*RowsMap)->Values)
-            {
-                const TSharedPtr<FJsonObject> *RowValue = nullptr;
-                if (Row.Value->TryGetObject(RowValue))
-                {
-                    FNestTypes RowItem;
-                    RowItem.Load(*RowValue);
-                    Rows.Add(Row.Key, RowItem);
-                }
-            }
+            const TSharedPtr<FJsonObject> *RowValue = nullptr;
+            if (!Row.Value->TryGetObject(RowValue)) return false;
+            FNestTypes RowItem;
+            if (!RowItem.Load(*RowValue)) return false;
+            _Result.Add(Row.Key, RowItem);
         }
 
-        OnLoad();
+        Rows = MoveTemp(_Result);
+        return true;
     }
 
     const FNestTypes* Find(int32 ID) const

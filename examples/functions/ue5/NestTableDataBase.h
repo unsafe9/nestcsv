@@ -13,17 +13,15 @@ struct FNestTableDataBase
     FNestTableDataBase() {}
     virtual ~FNestTableDataBase() {}
 
-    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) {}
-    virtual void Load(const FString& JsonString)
+    virtual bool Load(const TSharedPtr<FJsonObject>& JsonObject) { return false; }
+    virtual bool Load(const FString& JsonString)
     {
         TSharedPtr<FJsonObject> JsonObject;
         TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(JsonString);
         if (FJsonSerializer::Deserialize(JsonReader, JsonObject) && JsonObject.IsValid())
         {
-            Load(JsonObject);
+            return Load(JsonObject);
         }
+        return false;
     }
-
-protected:
-    virtual void OnLoad() {}
 };

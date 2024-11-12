@@ -19,12 +19,16 @@ struct FNestSKU : public FNestTableDataBase
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     FString ID;
 
-    virtual void Load(const TSharedPtr<FJsonObject>& JsonObject) override
+    virtual bool Load(const TSharedPtr<FJsonObject>& JsonObject) override
     {
-        JsonObject.ToSharedRef()->TryGetStringField(TEXT("Type"), Type);
-        JsonObject.ToSharedRef()->TryGetStringField(TEXT("ID"), ID);
+        if (!JsonObject.IsValid()) return false;
+        FNestSKU _Result;
 
-        OnLoad();
+        if (!JsonObject.ToSharedRef()->TryGetStringField(TEXT("Type"), _Result.Type)) return false;
+        if (!JsonObject.ToSharedRef()->TryGetStringField(TEXT("ID"), _Result.ID)) return false;
+
+        *this = MoveTemp(_Result);
+        return true;
     }
 
     //NESTCSV:NESTSKU_EXTRA_BODY_START

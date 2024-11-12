@@ -24,24 +24,24 @@ struct FNestComplexTable : public FNestTableBase
         return TEXT("complex");
     }
 
-    virtual void Load(const TSharedPtr<FJsonValue>& JsonValue) override
+    virtual bool Load(const TSharedPtr<FJsonValue>& JsonValue) override
     {
+        if (!JsonValue.IsValid()) return false;
+        TArray<FNestComplex> _Result;
+
         const TArray<TSharedPtr<FJsonValue>>* RowsArray = nullptr;
-        if (JsonValue->TryGetArray(RowsArray))
+        if (!JsonValue->TryGetArray(RowsArray)) return false;
+        for (const auto& Row : *RowsArray)
         {
-            for (const auto& Row : *RowsArray)
-            {
-                const TSharedPtr<FJsonObject> *RowValue = nullptr;
-                if (Row->TryGetObject(RowValue))
-                {
-                    FNestComplex RowItem;
-                    RowItem.Load(*RowValue);
-                    Rows.Add(RowItem);
-                }
-            }
+            const TSharedPtr<FJsonObject> *RowValue = nullptr;
+            if (!Row->TryGetObject(RowValue)) return false;
+            FNestComplex RowItem;
+            if (!RowItem.Load(*RowValue)) return false;
+            _Result.Add(RowItem);
         }
 
-        OnLoad();
+        Rows = MoveTemp(_Result);
+        return true;
     }
 
     //NESTCSV:NESTCOMPLEX_EXTRA_BODY_START
