@@ -70,6 +70,7 @@ See [examples](./examples)
 - [ ] Generate SQL dump file
 ### Code generation
 - [ ] Generate Protobuf schema
+- [ ] Generate Rust code
 - [ ] Generate Node.js code with type definitions
 - [ ] Generate PostgreSQL DDL
 - [ ] Generate MySQL DDL
