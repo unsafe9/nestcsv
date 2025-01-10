@@ -180,6 +180,22 @@ func (p *TableParser) Marshal(fields []*TableField) (any, error) {
 					}
 				}
 
+			} else if field.IsMultiLineArray {
+				arrayValue, ok := container[field.Name]
+				if !ok {
+					arrayValue = make([]any, 0)
+				}
+				arr := arrayValue.([]any)
+				if len(arr) <= multiLineArrayIdx {
+					cell := row[field.column]
+					v, err := p.parseGoValue(field.Type, cell)
+					if err != nil {
+						return fmt.Errorf("failed to parse array value: %s, %s, %d, %s, %w", td.Name, field.Name, rowIdx, cell, err)
+					}
+					arr = append(arr, v)
+				}
+				container[field.Name] = arr
+
 			} else if field.IsCellArray {
 				// fill array value
 				cell := row[field.column]
