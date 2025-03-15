@@ -4,7 +4,7 @@ package table
 
 type RewardParamValue struct {
 	Str   string  `json:"Str"`
-	Int   int     `json:"Int"`
+	Int   int32   `json:"Int"`
 	Float float64 `json:"Float"`
 }
 

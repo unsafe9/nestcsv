@@ -11,13 +11,13 @@ import (
 )
 
 type Types struct {
-	Int         int         `json:"Int"`
+	Int         int32       `json:"Int"`
 	Long        int64       `json:"Long"`
 	Float       float64     `json:"Float"`
 	String      string      `json:"String"`
 	Time        time.Time   `json:"Time"`
 	Json        interface{} `json:"Json"`
-	IntArray    []int       `json:"IntArray"`
+	IntArray    []int32     `json:"IntArray"`
 	LongArray   []int64     `json:"LongArray"`
 	FloatArray  []float64   `json:"FloatArray"`
 	StringArray []string    `json:"StringArray"`
@@ -36,7 +36,7 @@ func (t *TypesTable) GetRows() interface{} {
 	return t.Rows
 }
 
-func (t *TypesTable) Find(id int) (*Types, bool) {
+func (t *TypesTable) Find(id int32) (*Types, bool) {
 	if row, ok := t.Rows[strconv.Itoa(id)]; ok {
 		return &row, true
 	}

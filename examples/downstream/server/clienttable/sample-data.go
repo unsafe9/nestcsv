@@ -9,7 +9,7 @@ import (
 )
 
 type SampleData struct {
-	ID         int    `json:"ID"`
+	ID         int32  `json:"ID"`
 	ClientData string `json:"ClientData"`
 	CommonData string `json:"CommonData"`
 }
@@ -26,7 +26,7 @@ func (t *SampleDataTable) GetRows() interface{} {
 	return t.Rows
 }
 
-func (t *SampleDataTable) Find(id int) (*SampleData, bool) {
+func (t *SampleDataTable) Find(id int32) (*SampleData, bool) {
 	for _, row := range t.Rows {
 		if row.ID == id {
 			return &row, true

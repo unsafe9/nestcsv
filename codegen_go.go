@@ -16,6 +16,7 @@ type CodegenGo struct {
 	PackageName string `yaml:"package_name"`
 	Singleton   bool   `yaml:"singleton"`
 	Context     bool   `yaml:"context"`
+	Int32ToInt  bool   `yaml:"int32_to_int"`
 }
 
 func (c *CodegenGo) Generate(code *Code) error {
@@ -111,7 +112,10 @@ func (c *CodegenGo) fieldElemType(f *CodeStructField) string {
 func (c *CodegenGo) fieldPrimitiveType(typ FieldType) string {
 	switch typ {
 	case FieldTypeInt:
-		return "int"
+		if c.Int32ToInt {
+			return "int"
+		}
+		return "int32"
 	case FieldTypeLong:
 		return "int64"
 	case FieldTypeFloat:

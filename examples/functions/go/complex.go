@@ -13,7 +13,7 @@ type ComplexA struct {
 }
 
 type Complex struct {
-	ID      int      `json:"ID"`
+	ID      int32    `json:"ID"`
 	SKU     []SKU    `json:"SKU"`
 	Rewards []Reward `json:"Rewards"`
 	A       ComplexA `json:"A"`
@@ -31,7 +31,7 @@ func (t *ComplexTable) GetRows() interface{} {
 	return t.Rows
 }
 
-func (t *ComplexTable) Find(id int) (*Complex, bool) {
+func (t *ComplexTable) Find(id int32) (*Complex, bool) {
 	for _, row := range t.Rows {
 		if row.ID == id {
 			return &row, true
