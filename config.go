@@ -5,10 +5,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"os"
 	"slices"
-	"strings"
 )
-
-var commandArgs []string
 
 type Config struct {
 	Datasources []DatasourceConfig `yaml:"datasources"`
@@ -16,7 +13,8 @@ type Config struct {
 	Codegens    []CodegenConfig    `yaml:"codegens"`
 }
 
-func ParseConfig(configPath string) (*Config, error) {
+func ParseConfig(configPath string, args []string) (*Config, error) {
+
 	var config Config
 	file, err := os.Open(configPath)
 	if err != nil {
@@ -29,23 +27,16 @@ func ParseConfig(configPath string) (*Config, error) {
 	}
 
 	config.Datasources = filter(config.Datasources, func(d DatasourceConfig) bool {
-		return d.When == nil || d.When.Match()
+		return d.When == nil || d.When.Match(args)
 	})
 	config.Outputs = filter(config.Outputs, func(e OutputConfig) bool {
-		return e.When == nil || e.When.Match()
+		return e.When == nil || e.When.Match(args)
 	})
 	config.Codegens = filter(config.Codegens, func(c CodegenConfig) bool {
-		return c.When == nil || c.When.Match()
+		return c.When == nil || c.When.Match(args)
 	})
 
 	return &config, nil
-}
-
-func SetCommandArgs(argsStr string) {
-	commandArgs = strings.Split(argsStr, " ")
-	for i := 0; i < len(commandArgs); i++ {
-		commandArgs[i] = strings.TrimSpace(commandArgs[i])
-	}
 }
 
 type When struct {
@@ -55,18 +46,18 @@ type When struct {
 	Args []string          `yaml:"args,omitempty"`
 }
 
-func (w *When) Match() bool {
-	return w.match() != w.Not
+func (w *When) Match(args []string) bool {
+	return w.match(args) != w.Not
 }
 
-func (w *When) match() bool {
+func (w *When) match(args []string) bool {
 	for key, value := range w.Env {
 		if os.Getenv(key) != value {
 			return false
 		}
 	}
 	for _, arg := range w.Args {
-		if !slices.Contains(commandArgs, arg) {
+		if !slices.Contains(args, arg) {
 			return false
 		}
 	}

@@ -3,9 +3,8 @@ package main
 import (
 	"flag"
 	"github.com/unsafe9/nestcsv"
-	"golang.org/x/sync/errgroup"
 	"log"
-	"sync"
+	"strings"
 )
 
 func main() {
@@ -17,61 +16,17 @@ func main() {
 	flag.StringVar(&commandArgs, "a", "", "command arguments")
 	flag.Parse()
 
-	nestcsv.SetCommandArgs(commandArgs)
+	args := strings.Split(commandArgs, " ")
+	for i := 0; i < len(args); i++ {
+		args[i] = strings.TrimSpace(args[i])
+	}
 
-	config, err := nestcsv.ParseConfig(configPath)
+	config, err := nestcsv.ParseConfig(configPath, args)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatalf("parse config: %v", err)
 	}
 
-	out := make(chan *nestcsv.TableData, 1000)
-
-	go func() {
-		defer close(out)
-
-		var wg errgroup.Group
-		for _, datasource := range config.Datasources {
-			wg.Go(func() error {
-				return datasource.Collect(out)
-			})
-		}
-		if err := wg.Wait(); err != nil {
-			log.Fatalf("failed to collect table: %v", err)
-		}
-	}()
-
-	var (
-		tableDatas []*nestcsv.TableData
-		mu         sync.Mutex
-	)
-
-	var wg errgroup.Group
-	for tableData := range out {
-		wg.Go(func() error {
-			for _, output := range config.Outputs {
-				if err := output.Write(tableData); err != nil {
-					return err
-				}
-			}
-
-			mu.Lock()
-			tableDatas = append(tableDatas, tableData)
-			mu.Unlock()
-			return nil
-		})
-	}
-	if err := wg.Wait(); err != nil {
-		log.Fatalf("failed to save table: %v", err)
-	}
-
-	if len(tableDatas) > 0 {
-		for _, codegen := range config.Codegens {
-			wg.Go(func() error {
-				return codegen.Generate(tableDatas)
-			})
-		}
-		if err := wg.Wait(); err != nil {
-			log.Fatalf("failed to generate code: %v", err)
-		}
+	if err := nestcsv.Generate(config); err != nil {
+		log.Fatalf("generate: %v", err)
 	}
 }
