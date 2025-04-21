@@ -18,8 +18,8 @@ type SampleDataTable struct {
 	Rows []SampleData
 }
 
-func (t *SampleDataTable) SheetName() string {
-	return "sample-data"
+func (t *SampleDataTable) TableName() string {
+	return SampleDataName
 }
 
 func (t *SampleDataTable) GetRows() interface{} {

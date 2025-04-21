@@ -28,8 +28,8 @@ type TypesTable struct {
 	Rows map[string]Types
 }
 
-func (t *TypesTable) SheetName() string {
-	return "types"
+func (t *TypesTable) TableName() string {
+	return TypesName
 }
 
 func (t *TypesTable) GetRows() interface{} {

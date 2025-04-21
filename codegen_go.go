@@ -24,10 +24,6 @@ func (c *CodegenGo) Generate(code *Code) error {
 		c.PackageName = filepath.Base(c.RootDir)
 	}
 
-	if err := c.template("table_base.go", "table_base.go.tpl", nil); err != nil {
-		return err
-	}
-
 	for file := range code.Files {
 		values := map[string]any{
 			"File": file,
@@ -40,7 +36,7 @@ func (c *CodegenGo) Generate(code *Code) error {
 	values := map[string]any{
 		"Tables": code.Tables,
 	}
-	return c.template("loader.go", "loader.go.tpl", values)
+	return c.template("nestcsv.go", "nestcsv.go.tpl", values)
 }
 
 var goEmptyImportRegexp = regexp.MustCompile(`import \(\s*\n\s*\)`)

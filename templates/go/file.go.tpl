@@ -34,8 +34,8 @@ type {{ pascal .Struct.Name }}Table struct{
     {{- end }}
 }
 
-func (t *{{ pascal .Struct.Name }}Table) SheetName() string {
-    return "{{ .Struct.Name }}"
+func (t *{{ pascal .Struct.Name }}Table) TableName() string {
+    return {{ pascal .Struct.Name }}Name
 }
 
 func (t *{{ pascal .Struct.Name }}Table) GetRows() interface{} {

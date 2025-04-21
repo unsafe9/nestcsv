@@ -18,13 +18,21 @@ func LoadTablesFromFile(basePath string) (*TableHolder, error) {
 	return &t, nil
 }
 
+type TableBase interface {
+	TableName() string
+	GetRows() interface{}
+	Load(data []byte) error
+	LoadFromString(jsonString string) error
+	LoadFromFile(basePath string) error
+}
+
 func (t *TableHolder) GetTables() []TableBase {
 	return []TableBase{
 		&t.SampleData,
 	}
 }
 
-func (t *TableHolder) TableByName(tableName string) TableBase {
+func (t *TableHolder) GetTable(tableName string) TableBase {
 	switch tableName {
 	case SampleDataName:
 		return &t.SampleData

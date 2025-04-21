@@ -23,8 +23,8 @@ type ComplexTable struct {
 	Rows []Complex
 }
 
-func (t *ComplexTable) SheetName() string {
-	return "complex"
+func (t *ComplexTable) TableName() string {
+	return ComplexName
 }
 
 func (t *ComplexTable) GetRows() interface{} {
