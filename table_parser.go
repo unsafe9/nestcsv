@@ -170,6 +170,11 @@ func (p *TableParser) Marshal(fields []*TableField) (any, error) {
 					}
 				}
 
+			} else if isMultiLineRow && multiLineArrayField == nil {
+				// the cases below are for filling actual values
+				// if the row is multi-line, we skip non-multi-line fields
+				return nil
+
 			} else if field.IsMultiLineArray {
 				arrayValue, ok := container[field.Name]
 				if !ok {
