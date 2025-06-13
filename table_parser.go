@@ -137,16 +137,6 @@ func (p *TableParser) Marshal(fields []*TableField) (any, error) {
 					multiLineArrayRowCount[rowCountIdx]++
 				}
 				multiLineArrayIdx = multiLineArrayRowCount[rowCountIdx] - 1
-
-			} else if isMultiLineRow {
-				// struct fields might have a multi-line array field
-				for _, f := range field.StructFields {
-					if err := visitField(f, container); err != nil {
-						return err
-					}
-				}
-				// skip the rest of the process
-				return nil
 			}
 
 			if len(field.StructFields) > 0 {
