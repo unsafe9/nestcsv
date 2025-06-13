@@ -11,6 +11,11 @@ func Generate(config *Config) error {
 	errStop := make(chan error, 1)
 
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				errStop <- fmt.Errorf("panic during collect datasource: %v", r)
+			}
+		}()
 		defer close(out)
 
 		var wg errgroup.Group
@@ -26,6 +31,12 @@ func Generate(config *Config) error {
 	}()
 
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				errStop <- fmt.Errorf("panic during write output: %v", r)
+			}
+		}()
+
 		var (
 			tableDatas []*TableData
 			mu         sync.Mutex
