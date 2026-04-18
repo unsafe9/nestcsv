@@ -46,7 +46,7 @@ func (t *{{ pascal .Struct.Name }}Table) GetRows() interface{} {
 func (t *{{ pascal .Struct.Name }}Table) Find(id {{ fieldPrimitiveType .IDFieldType }}) (*{{ pascal .Struct.Name }}, bool) {
     {{- if .IsMap }}
     {{- if eq .IDFieldType "int" }}
-    if row, ok := t.Rows[strconv.Itoa(id)]; ok {
+    if row, ok := t.Rows[strconv.FormatInt(int64(id), 10)]; ok {
     {{- else if eq .IDFieldType "long" }}
     if row, ok := t.Rows[strconv.FormatInt(id, 10)]; ok {
     {{- else }}

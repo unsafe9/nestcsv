@@ -37,7 +37,7 @@ func (t *TypesTable) GetRows() interface{} {
 }
 
 func (t *TypesTable) Find(id int32) (*Types, bool) {
-	if row, ok := t.Rows[strconv.Itoa(id)]; ok {
+	if row, ok := t.Rows[strconv.FormatInt(int64(id), 10)]; ok {
 		return &row, true
 	}
 	return nil, false
