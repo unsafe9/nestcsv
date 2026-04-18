@@ -17,18 +17,22 @@ type CodegenGo struct {
 	Singleton   bool   `yaml:"singleton"`
 	Context     bool   `yaml:"context"`
 	Int32ToInt  bool   `yaml:"int32_to_int"`
+	FileSuffix  string `yaml:"file_suffix"`
 }
 
 func (c *CodegenGo) Generate(code *Code) error {
 	if c.PackageName == "" {
 		c.PackageName = filepath.Base(c.RootDir)
 	}
+	if c.FileSuffix == "" {
+		c.FileSuffix = ".go"
+	}
 
 	for file := range code.Files {
 		values := map[string]any{
 			"File": file,
 		}
-		if err := c.template(file.Name+".go", "file.go.tpl", values); err != nil {
+		if err := c.template(file.Name, "file.go.tpl", values); err != nil {
 			return err
 		}
 	}
@@ -36,7 +40,7 @@ func (c *CodegenGo) Generate(code *Code) error {
 	values := map[string]any{
 		"Tables": code.Tables,
 	}
-	return c.template("nestcsv.go", "nestcsv.go.tpl", values)
+	return c.template("nestcsv", "nestcsv.go.tpl", values)
 }
 
 var goEmptyImportRegexp = regexp.MustCompile(`import \(\s*\n\s*\)`)
@@ -79,7 +83,7 @@ func (c *CodegenGo) template(fileName, templateName string, values map[string]an
 		return fmt.Errorf("error formatting source: %s, %w", fileName, err)
 	}
 
-	file, err := createFile(c.RootDir, strings.ToLower(fileName), "go")
+	file, err := createFile(c.RootDir, strings.ToLower(fileName), c.FileSuffix)
 	if err != nil {
 		return err
 	}

@@ -39,6 +39,7 @@ codegens:
     go:
       root_dir: ./go
       package_name: table
+      file_suffix: ".gen.go"  # optional, default ".go"
   - tags: [client]
     ue5:
       root_dir: ./ue5
