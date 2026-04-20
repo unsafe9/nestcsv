@@ -44,6 +44,7 @@ codegens:
     ue5:
       root_dir: ./ue5
       prefix: Nest
+      file_suffix: ".gen.h"        # optional, default ".h"
   - tags: [client]
     unity:
       root_dir: ./unity

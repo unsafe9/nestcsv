@@ -3,7 +3,7 @@
 #pragma once
 
 {{ range .Tables }}
-#include "{{ $.Prefix }}{{ pascal .Name }}Table.h"
+#include "{{ $.Prefix }}{{ pascal .Name }}Table{{ $.FileSuffix }}"
 {{- end }}
 #include "{{ .Prefix }}TableHolder.generated.h"
 

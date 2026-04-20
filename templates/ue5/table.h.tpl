@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "{{ $.Prefix }}TableBase.h"
-#include "{{ $.Prefix }}{{ pascal .Name }}.h"
+#include "{{ $.Prefix }}TableBase{{ $.FileSuffix }}"
+#include "{{ $.Prefix }}{{ pascal .Name }}{{ $.FileSuffix }}"
 
 {{ $extraInclude := list $.Prefix .Name "_EXTRA_INCLUDE" | join "" | upper -}}
 //NESTCSV:{{ $extraInclude }}_START

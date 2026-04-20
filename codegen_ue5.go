@@ -10,22 +10,27 @@ import (
 )
 
 type CodegenUE5 struct {
-	RootDir string `yaml:"root_dir"`
-	Prefix  string `yaml:"prefix"`
+	RootDir    string `yaml:"root_dir"`
+	Prefix     string `yaml:"prefix"`
+	FileSuffix string `yaml:"file_suffix"`
 }
 
 func (c *CodegenUE5) Generate(code *Code) error {
-	if err := c.template("TableDataBase.h", "TableDataBase.h.tpl", false, nil); err != nil {
+	if c.FileSuffix == "" {
+		c.FileSuffix = ".h"
+	}
+
+	if err := c.template("TableDataBase", "TableDataBase.h.tpl", false, nil); err != nil {
 		return err
 	}
-	if err := c.template("TableBase.h", "TableBase.h.tpl", false, nil); err != nil {
+	if err := c.template("TableBase", "TableBase.h.tpl", false, nil); err != nil {
 		return err
 	}
 
 	values := map[string]any{
 		"Tables": code.Tables,
 	}
-	if err := c.template("TableHolder.h", "TableHolder.h.tpl", false, values); err != nil {
+	if err := c.template("TableHolder", "TableHolder.h.tpl", false, values); err != nil {
 		return err
 	}
 
@@ -33,12 +38,12 @@ func (c *CodegenUE5) Generate(code *Code) error {
 		values = map[string]any{
 			"File": file,
 		}
-		if err := c.template(pascal(file.Name)+".h", "file.h.tpl", true, values); err != nil {
+		if err := c.template(pascal(file.Name), "file.h.tpl", true, values); err != nil {
 			return err
 		}
 
 		if file.IsTable {
-			if err := c.template(pascal(file.Name)+"Table.h", "table.h.tpl", true, values); err != nil {
+			if err := c.template(pascal(file.Name)+"Table", "table.h.tpl", true, values); err != nil {
 				return err
 			}
 		}
@@ -47,7 +52,7 @@ func (c *CodegenUE5) Generate(code *Code) error {
 }
 
 func (c *CodegenUE5) readExistingFileContent(fileName string) (map[string]any, error) {
-	filePath := makeFilePath(c.RootDir, c.Prefix+fileName, filepath.Ext(fileName))
+	filePath := makeFilePath(c.RootDir, c.Prefix+fileName, c.FileSuffix)
 	file, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -96,7 +101,7 @@ func (c *CodegenUE5) template(fileName, templateName string, withRegions bool, v
 		}
 	}
 
-	file, err := createFile(c.RootDir, c.Prefix+fileName, filepath.Ext(fileName))
+	file, err := createFile(c.RootDir, c.Prefix+fileName, c.FileSuffix)
 	if err != nil {
 		return err
 	}
@@ -120,7 +125,8 @@ func (c *CodegenUE5) template(fileName, templateName string, withRegions bool, v
 		extendMap(
 			values,
 			map[string]any{
-				"Prefix": c.Prefix,
+				"Prefix":     c.Prefix,
+				"FileSuffix": c.FileSuffix,
 			},
 		),
 	)

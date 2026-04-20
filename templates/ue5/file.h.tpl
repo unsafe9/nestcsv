@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "{{ $.Prefix }}TableDataBase.h"
+#include "{{ $.Prefix }}TableDataBase{{ $.FileSuffix }}"
 {{- range .FileRefs }}
-#include "{{ $.Prefix }}{{ pascal .Name }}.h"
+#include "{{ $.Prefix }}{{ pascal .Name }}{{ $.FileSuffix }}"
 {{- end }}
 
 {{ $extraInclude := list $.Prefix .Name "_EXTRA_INCLUDE" | join "" | upper -}}
