@@ -13,8 +13,9 @@ type CodegenConfig struct {
 	Tags []string `yaml:"tags"`
 
 	exclusiveConfigGroup[Codegen]
-	Go  *CodegenGo  `yaml:"go,omitempty"`
-	UE5 *CodegenUE5 `yaml:"ue5,omitempty"`
+	Go    *CodegenGo    `yaml:"go,omitempty"`
+	UE5   *CodegenUE5   `yaml:"ue5,omitempty"`
+	Unity *CodegenUnity `yaml:"unity,omitempty"`
 }
 
 func (c *CodegenConfig) Generate(tableDatas []*TableData) error {

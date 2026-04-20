@@ -33,3 +33,11 @@ codegens:
     ue5:
       root_dir: ./ue5
       prefix: "Nest"
+  - tags: [all, client]
+    unity:
+      root_dir: ./unity
+      namespace: "Nestcsv.Example"
+      singleton: true
+      data_suffix: "Data"
+      table_suffix: "DB"
+      resource_folder: "MetaData"

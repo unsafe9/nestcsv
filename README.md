@@ -44,6 +44,15 @@ codegens:
     ue5:
       root_dir: ./ue5
       prefix: Nest
+  - tags: [client]
+    unity:
+      root_dir: ./unity
+      namespace: MyGame.Tables
+      singleton: true
+      data_suffix: Data            # optional, e.g. FooData
+      table_suffix: DB             # optional, default "Table" (e.g. FooDB)
+      resource_folder: MetaData    # optional, enables {Foo}DB.inst() auto-load from Resources/MetaData/foo.json
+      file_suffix: ".gen.cs"       # optional, default ".cs"
     
 ```
 
@@ -70,6 +79,7 @@ See [examples](./examples)
 ### Output
 - [ ] Generate SQL dump file
 ### Code generation
+- [x] Generate Unity (C#) code (Unity 6, Newtonsoft.Json)
 - [ ] Generate Protobuf schema
 - [ ] Generate Rust code
 - [ ] Generate Node.js code with type definitions
