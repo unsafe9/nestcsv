@@ -17,10 +17,10 @@ const (
 )
 
 func main() {
-	var tables table.Tables
+	var tables table.TableHolder
 	for _, t := range tables.GetTables() {
-		data, checksum := loadFile(t.SheetName())
-		url := serverUrl + "/table/" + t.SheetName() + "?checksum=" + checksum
+		data, checksum := loadFile(t.TableName())
+		url := serverUrl + "/table/" + t.TableName() + "?checksum=" + checksum
 		log.Printf("req: %s\n", url)
 		res, err := http.Get(url)
 		if err != nil {
@@ -44,12 +44,12 @@ func main() {
 				panic(err)
 			}
 			data = decoded
-			if err := os.WriteFile(saveDataPath+t.SheetName()+".json", decoded, 0644); err != nil {
+			if err := os.WriteFile(saveDataPath+t.TableName()+".json", decoded, 0644); err != nil {
 				panic(err)
 			}
-			log.Printf("update table from server: %s, %s\n", t.SheetName(), string(data))
+			log.Printf("update table from server: %s, %s\n", t.TableName(), string(data))
 		} else {
-			log.Printf("table is up to date: %s\n", t.SheetName())
+			log.Printf("table is up to date: %s\n", t.TableName())
 		}
 		if err := t.Load(data); err != nil {
 			panic(err)

@@ -49,11 +49,11 @@ func main() {
 	for _, t := range clientTables.GetTables() {
 		data := mustJson(t.GetRows())
 		checksum := md5.Sum(data)
-		tableCacheMap[t.SheetName()] = tableData{
+		tableCacheMap[t.TableName()] = tableData{
 			Data:     data,
 			Checksum: hex.EncodeToString(checksum[:]),
 		}
-		log.Println("table cache:", t.SheetName(), tableCacheMap[t.SheetName()].Checksum)
+		log.Println("table cache:", t.TableName(), tableCacheMap[t.TableName()].Checksum)
 	}
 
 	mux := http.NewServeMux()
