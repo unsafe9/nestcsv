@@ -25,10 +25,12 @@ public partial class ComplexDB : TableBase
 
     public override object GetRows() => Rows;
 
-    public override void Load(string jsonString)
+    public override bool Load(string jsonString)
     {
-        Rows = JsonConvert.DeserializeObject<List<ComplexData>>(jsonString)
-            ?? new List<ComplexData>();
+        var result = JsonConvert.DeserializeObject<List<ComplexData>>(jsonString);
+        if (result == null) return false;
+        Rows = result;
+        return true;
     }
 
     private static ComplexDB s_instance;
@@ -38,14 +40,22 @@ public partial class ComplexDB : TableBase
         if (s_instance == null)
         {
             s_instance = new ComplexDB();
-            var textAsset = Resources.Load<TextAsset>("MetaData/complex");
-            if (textAsset != null)
+            var providerJson = TableBase.TableProvider?.Invoke("complex");
+            if (providerJson != null)
             {
-                s_instance.Load(textAsset.text);
+                s_instance.Load(providerJson);
             }
             else
             {
-                Debug.LogError("[ComplexDB] complex.json not found in Resources/MetaData/");
+                var textAsset = Resources.Load<TextAsset>("MetaData/complex");
+                if (textAsset != null)
+                {
+                    s_instance.Load(textAsset.text);
+                }
+                else
+                {
+                    Debug.LogError("[ComplexDB] complex.json not found in Resources/MetaData/");
+                }
             }
         }
         return s_instance;

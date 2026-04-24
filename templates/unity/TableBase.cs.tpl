@@ -11,29 +11,35 @@ namespace {{ .Namespace }}
 {{ end -}}
 public abstract class {{ .Prefix }}TableBase
 {
+    public static Func<string, string> TableProvider;
+
     public abstract string TableName { get; }
 
     public abstract object GetRows();
 
-    public abstract void Load(string jsonString);
+    public abstract bool Load(string jsonString);
 
-    public virtual void LoadFromFile(string basePath)
+    public virtual bool LoadFromFile(string basePath)
     {
         var filePath = Path.Combine(basePath, TableName + ".json");
-        Load(File.ReadAllText(filePath));
+        if (!File.Exists(filePath))
+        {
+            return false;
+        }
+        return Load(File.ReadAllText(filePath));
     }
 {{- if .ResourceFolder }}
 
-    public virtual void LoadFromResources(string resourceFolder)
+    public virtual bool LoadFromResources(string resourceFolder)
     {
         var resourcePath = string.IsNullOrEmpty(resourceFolder) ? TableName : resourceFolder + "/" + TableName;
         var textAsset = Resources.Load<TextAsset>(resourcePath);
         if (textAsset == null)
         {
             Debug.LogError("[" + GetType().Name + "] " + TableName + ".json not found in Resources/" + resourcePath);
-            return;
+            return false;
         }
-        Load(textAsset.text);
+        return Load(textAsset.text);
     }
 {{- end }}
 }

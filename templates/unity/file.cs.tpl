@@ -40,15 +40,18 @@ public partial class {{ $.Prefix }}{{ pascal .Struct.Name }}{{ $.TableSuffix }} 
 
     public override object GetRows() => Rows;
 
-    public override void Load(string jsonString)
+    public override bool Load(string jsonString)
     {
 {{- if .IsMap }}
-        Rows = JsonConvert.DeserializeObject<Dictionary<{{ fieldPrimitiveType .IDFieldType }}, {{ $.Prefix }}{{ pascal .Struct.Name }}{{ $.DataSuffix }}>>(jsonString)
-            ?? new Dictionary<{{ fieldPrimitiveType .IDFieldType }}, {{ $.Prefix }}{{ pascal .Struct.Name }}{{ $.DataSuffix }}>();
+        var result = JsonConvert.DeserializeObject<Dictionary<{{ fieldPrimitiveType .IDFieldType }}, {{ $.Prefix }}{{ pascal .Struct.Name }}{{ $.DataSuffix }}>>(jsonString);
+        if (result == null) return false;
+        Rows = result;
 {{- else }}
-        Rows = JsonConvert.DeserializeObject<List<{{ $.Prefix }}{{ pascal .Struct.Name }}{{ $.DataSuffix }}>>(jsonString)
-            ?? new List<{{ $.Prefix }}{{ pascal .Struct.Name }}{{ $.DataSuffix }}>();
+        var result = JsonConvert.DeserializeObject<List<{{ $.Prefix }}{{ pascal .Struct.Name }}{{ $.DataSuffix }}>>(jsonString);
+        if (result == null) return false;
+        Rows = result;
 {{- end }}
+        return true;
     }
 {{- if or .IDField .IsMap }}
 
@@ -66,6 +69,16 @@ public partial class {{ $.Prefix }}{{ pascal .Struct.Name }}{{ $.TableSuffix }} 
         row = Find(id);
         return row != null;
     }
+
+    public {{ $.Prefix }}{{ pascal .Struct.Name }}{{ $.DataSuffix }} FindOrThrow({{ fieldPrimitiveType .IDFieldType }} id)
+    {
+        var row = Find(id);
+        if (row == null)
+        {
+            throw new KeyNotFoundException("[" + GetType().Name + "] row with id '" + id + "' not found in " + TableName);
+        }
+        return row;
+    }
 {{- end }}
 {{- if $.ResourceFolder }}
 
@@ -76,14 +89,22 @@ public partial class {{ $.Prefix }}{{ pascal .Struct.Name }}{{ $.TableSuffix }} 
         if (s_instance == null)
         {
             s_instance = new {{ $.Prefix }}{{ pascal .Struct.Name }}{{ $.TableSuffix }}();
-            var textAsset = Resources.Load<TextAsset>("{{ $.ResourceFolder }}/{{ .Name }}");
-            if (textAsset != null)
+            var providerJson = {{ $.Prefix }}TableBase.TableProvider?.Invoke("{{ .Name }}");
+            if (providerJson != null)
             {
-                s_instance.Load(textAsset.text);
+                s_instance.Load(providerJson);
             }
             else
             {
-                Debug.LogError("[{{ $.Prefix }}{{ pascal .Struct.Name }}{{ $.TableSuffix }}] {{ .Name }}.json not found in Resources/{{ $.ResourceFolder }}/");
+                var textAsset = Resources.Load<TextAsset>("{{ $.ResourceFolder }}/{{ .Name }}");
+                if (textAsset != null)
+                {
+                    s_instance.Load(textAsset.text);
+                }
+                else
+                {
+                    Debug.LogError("[{{ $.Prefix }}{{ pascal .Struct.Name }}{{ $.TableSuffix }}] {{ .Name }}.json not found in Resources/{{ $.ResourceFolder }}/");
+                }
             }
         }
         return s_instance;

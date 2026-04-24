@@ -44,10 +44,12 @@ public partial class TypesDB : TableBase
 
     public override object GetRows() => Rows;
 
-    public override void Load(string jsonString)
+    public override bool Load(string jsonString)
     {
-        Rows = JsonConvert.DeserializeObject<Dictionary<int, TypesData>>(jsonString)
-            ?? new Dictionary<int, TypesData>();
+        var result = JsonConvert.DeserializeObject<Dictionary<int, TypesData>>(jsonString);
+        if (result == null) return false;
+        Rows = result;
+        return true;
     }
 
     public TypesData Find(int id)
@@ -61,6 +63,16 @@ public partial class TypesDB : TableBase
         return row != null;
     }
 
+    public TypesData FindOrThrow(int id)
+    {
+        var row = Find(id);
+        if (row == null)
+        {
+            throw new KeyNotFoundException("[" + GetType().Name + "] row with id '" + id + "' not found in " + TableName);
+        }
+        return row;
+    }
+
     private static TypesDB s_instance;
 
     public static TypesDB inst()
@@ -68,14 +80,22 @@ public partial class TypesDB : TableBase
         if (s_instance == null)
         {
             s_instance = new TypesDB();
-            var textAsset = Resources.Load<TextAsset>("MetaData/types");
-            if (textAsset != null)
+            var providerJson = TableBase.TableProvider?.Invoke("types");
+            if (providerJson != null)
             {
-                s_instance.Load(textAsset.text);
+                s_instance.Load(providerJson);
             }
             else
             {
-                Debug.LogError("[TypesDB] types.json not found in Resources/MetaData/");
+                var textAsset = Resources.Load<TextAsset>("MetaData/types");
+                if (textAsset != null)
+                {
+                    s_instance.Load(textAsset.text);
+                }
+                else
+                {
+                    Debug.LogError("[TypesDB] types.json not found in Resources/MetaData/");
+                }
             }
         }
         return s_instance;
